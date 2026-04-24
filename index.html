@@ -321,6 +321,9 @@ tr.selected-row{background:rgba(239,68,68,.07);}
     <button class="mnav-more-btn" onclick="nav(null,'reissue','♻ เบิก Used Tool','เบิก Tool ที่ผ่าน Inspect แล้ว');closeMobileMore()">
       <span style="font-size:22px;">♻</span><span>เบิก Used</span>
     </button>
+    <button class="mnav-more-btn" style="color:var(--red);" onclick="clearAllData();closeMobileMore()">
+      <span style="font-size:22px;">🗑</span><span>ล้างข้อมูล</span>
+    </button>
     <button class="mnav-more-btn" onclick="exportBackup();closeMobileMore()">
       <span style="font-size:22px;">💾</span><span>Backup</span>
     </button>
@@ -386,6 +389,7 @@ tr.selected-row{background:rgba(239,68,68,.07);}
       <button class="btn btn-outline hide-mobile" onclick="openSyncModal()" style="font-size:12px;" id="syncBtn">☁️ Sync</button>
       <button class="btn btn-outline hide-mobile" onclick="exportCSV()" style="font-size:12px;" title="Export CSV">⬇ CSV</button>
       <button class="btn btn-outline hide-mobile" onclick="exportExcel()" style="font-size:12px;" title="Export Excel">📊 Excel</button>
+      <button class="btn btn-outline hide-mobile" onclick="clearAllData()" title="ล้างข้อมูลทั้งหมด" style="font-size:12px;color:var(--red);">🗑 ล้างข้อมูล</button>
       <button class="btn btn-outline hide-mobile" onclick="exportBackup()" title="สำรองข้อมูล" style="font-size:12px;">💾 Backup</button>
       <button class="btn btn-outline hide-mobile" onclick="importBackup()" title="นำเข้า Backup" style="font-size:12px;">📂 Restore</button>
       <button class="btn btn-outline hide-mobile" onclick="openSyncModal()" title="ตั้งค่า Google Sheets URL" style="font-size:12px;">🔗 เชื่อมต่อ</button>
@@ -3213,6 +3217,41 @@ function scheduleSave(){
 async function syncNow(){
   const ok = await loadFromSheets();
   if(ok){ renderDashboard(); renderRegistry(); updateBadges(); }
+}
+
+
+// ── Clear ALL data (local + sheets) ──
+async function clearAllData(){
+  if(!confirm('⚠️ ล้างข้อมูลทั้งหมดใช่ไหม?\n\nจะลบข้อมูลใน LocalStorage และส่งข้อมูลว่างขึ้น Google Sheets ด้วย\n\nกระทำนี้ไม่สามารถย้อนกลับได้')) return;
+
+  // 1. Clear in-memory
+  REGISTRY.length = 0;
+  TXNS.length = 0;
+
+  // 2. Clear localStorage
+  try { localStorage.removeItem(LS_KEY); } catch(e){}
+
+  // 3. Push empty to Sheets (if connected)
+  if(GAS_URL){
+    showSaveStatus('🗑 กำลังล้างข้อมูลใน Sheets...', 'var(--red)');
+    try {
+      await fetch(GAS_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ REGISTRY: [], TXNS: [] })
+      });
+    } catch(e){}
+  }
+
+  // 4. Re-render everything
+  renderDashboard();
+  renderRegistry();
+  renderBuy();
+  renderIssue();
+  renderReturn();
+  renderReissue();
+  updateBadges();
+  showSaveStatus('✅ ล้างข้อมูลทั้งหมดแล้ว', 'var(--green)');
 }
 
 // ── Export JSON backup ──
