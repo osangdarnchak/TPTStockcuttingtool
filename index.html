@@ -1,0 +1,3350 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="CT Stock">
+<title>CutTool MS v3</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Thai:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#0d0f14;--surface:#13161e;--surface2:#1a1e2a;--border:#252a38;--accent:#00d4ff;--accent2:#7c3aed;--green:#22c55e;--yellow:#f59e0b;--red:#ef4444;--orange:#f97316;--text:#e2e8f0;--muted:#64748b;--r:12px;}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:'IBM Plex Sans Thai',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;font-size:14px;}
+.sidebar{position:fixed;left:0;top:0;bottom:0;width:230px;background:var(--surface);border-right:1px solid var(--border);display:flex;flex-direction:column;z-index:100;}
+.logo{padding:16px;border-bottom:1px solid var(--border);}
+.logo-title{font-size:12px;font-weight:700;color:var(--accent);letter-spacing:.08em;text-transform:uppercase;}
+.logo-sub{font-size:10px;color:var(--muted);margin-top:2px;}
+.nav{flex:1;padding:8px;overflow-y:auto;}
+.nav-sec{font-size:9px;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;padding:10px 10px 3px;}
+.nav-item{display:flex;align-items:center;gap:8px;padding:8px 10px;border-radius:7px;cursor:pointer;color:var(--muted);font-size:12px;font-weight:500;transition:all .12s;margin-bottom:1px;}
+.nav-item:hover{background:var(--surface2);color:var(--text);}
+.nav-item.active{background:rgba(0,212,255,.1);color:var(--accent);}
+.badge{margin-left:auto;font-size:9px;font-weight:700;padding:1px 6px;border-radius:10px;background:var(--accent);color:#000;}
+.badge.og{background:var(--orange);color:#fff;}
+.badge.gn{background:var(--green);color:#fff;}
+.badge.yl{background:var(--yellow);color:#000;}
+.sidebar-footer{padding:12px 16px;border-top:1px solid var(--border);font-size:10px;color:var(--muted);}
+.main{margin-left:230px;min-height:100vh;}
+.topbar{padding:12px 24px;border-bottom:1px solid var(--border);background:var(--surface);display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:50;}
+.page-title{font-size:16px;font-weight:700;}
+.page-sub{font-size:11px;color:var(--muted);margin-top:1px;}
+.topbar-right{display:flex;gap:8px;}
+.btn{padding:6px 13px;border-radius:7px;border:none;font-family:inherit;font-size:12px;font-weight:600;cursor:pointer;transition:all .12s;}
+.btn-primary{background:var(--accent);color:#000;}.btn-primary:hover{background:#00bde0;}
+.btn-outline{background:transparent;color:var(--text);border:1px solid var(--border);}.btn-outline:hover{background:var(--surface2);}
+.btn-orange{background:var(--orange);color:#fff;}
+.btn-green{background:var(--green);color:#fff;}
+.btn-yellow{background:var(--yellow);color:#000;}
+.content{padding:20px 24px;}
+.page{display:none;}.page.active{display:block;animation:fi .18s ease;}
+@keyframes fi{from{opacity:0;transform:translateY(3px)}to{opacity:1;transform:translateY(0)}}
+/* KPI */
+.kpi-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:12px;margin-bottom:18px;}
+.kpi{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:16px;position:relative;overflow:hidden;}
+.kpi::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;background:var(--kc,var(--accent));}
+.kpi.gn{--kc:var(--green)}.kpi.yl{--kc:var(--yellow)}.kpi.og{--kc:var(--orange)}.kpi.pu{--kc:var(--accent2)}
+.kpi-icon{position:absolute;right:12px;top:12px;font-size:22px;opacity:.1;}
+.kpi-label{font-size:9px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;}
+.kpi-val{font-size:21px;font-weight:700;margin:5px 0 2px;font-family:'JetBrains Mono',monospace;}
+.kpi-sub{font-size:10px;color:var(--muted);}
+/* CARD */
+.card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);overflow:hidden;margin-bottom:14px;}
+.card-hd{padding:12px 16px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;}
+.card-title{font-size:12px;font-weight:600;}
+.card-body{padding:16px;}
+/* GRID */
+.g2{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px;}
+.g3{display:grid;grid-template-columns:2fr 1fr;gap:14px;margin-bottom:14px;}
+/* TABLE */
+.tw{overflow-x:auto;}
+table{width:100%;border-collapse:collapse;}
+th{text-align:left;padding:8px 12px;font-size:9px;text-transform:uppercase;letter-spacing:.05em;color:var(--muted);background:var(--surface2);border-bottom:1px solid var(--border);white-space:nowrap;}
+td{padding:8px 12px;border-bottom:1px solid var(--border);font-size:12px;vertical-align:middle;}
+tr:last-child td{border-bottom:none;}
+tr:hover td{background:rgba(255,255,255,.02);}
+.mono{font-family:'JetBrains Mono',monospace;font-size:11px;}
+/* TAGS */
+.tag{display:inline-block;padding:2px 6px;border-radius:4px;font-size:10px;font-weight:600;}
+.tb{background:rgba(0,212,255,.15);color:var(--accent);}
+.tg{background:rgba(34,197,94,.15);color:var(--green);}
+.ty{background:rgba(245,158,11,.15);color:var(--yellow);}
+.tr{background:rgba(239,68,68,.15);color:var(--red);}
+.tp{background:rgba(124,58,237,.15);color:#a78bfa;}
+.to{background:rgba(249,115,22,.15);color:var(--orange);}
+.tm{background:var(--surface2);color:var(--muted);}
+/* STATUS PILL */
+.sp{display:inline-flex;align-items:center;gap:4px;padding:3px 8px;border-radius:20px;font-size:10px;font-weight:600;}
+.sp-stock{background:rgba(0,212,255,.15);color:var(--accent);}
+.sp-inuse{background:rgba(245,158,11,.15);color:var(--yellow);}
+.sp-used{background:rgba(249,115,22,.15);color:var(--orange);}
+.sp-inspect{background:rgba(124,58,237,.15);color:#a78bfa;}
+.sp-ok{background:rgba(34,197,94,.15);color:var(--green);}
+.sp-scrap{background:rgba(239,68,68,.15);color:var(--red);}
+.sp-noserial{background:var(--surface2);color:var(--muted);}
+/* FILTER */
+.fb{display:flex;gap:8px;align-items:center;margin-bottom:12px;flex-wrap:wrap;}
+.si{flex:1;min-width:160px;background:var(--surface);border:1px solid var(--border);color:var(--text);padding:6px 11px;border-radius:7px;font-family:inherit;font-size:12px;outline:none;}
+.si:focus{border-color:var(--accent);}
+.fs{background:var(--surface);border:1px solid var(--border);color:var(--text);padding:6px 9px;border-radius:7px;font-family:inherit;font-size:12px;cursor:pointer;outline:none;}
+.fs:focus{border-color:var(--accent);}
+/* STAT ROW */
+.sr{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:14px;}
+.sc{background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:9px 13px;font-size:11px;flex:1;min-width:100px;}
+.sc-label{color:var(--muted);margin-bottom:2px;font-size:10px;}
+.sc-val{font-size:16px;font-weight:700;font-family:'JetBrains Mono',monospace;color:var(--accent);}
+/* MODAL */
+.mo{display:none;position:fixed;inset:0;background:rgba(0,0,0,.65);z-index:200;align-items:center;justify-content:center;}
+.mo.open{display:flex;}
+.modal{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:24px;width:90%;max-width:580px;max-height:88vh;overflow-y:auto;}
+.mt{font-size:14px;font-weight:700;margin-bottom:16px;}
+.fg{margin-bottom:10px;}
+.fl{font-size:10px;color:var(--muted);margin-bottom:4px;display:block;}
+.fi{width:100%;background:var(--bg);border:1px solid var(--border);color:var(--text);padding:7px 10px;border-radius:6px;font-family:inherit;font-size:12px;outline:none;}
+.fi:focus{border-color:var(--accent);}
+.fr{display:grid;grid-template-columns:1fr 1fr;gap:9px;}
+.mf{display:flex;gap:8px;justify-content:flex-end;margin-top:16px;}
+/* TIMELINE */
+.timeline{padding:0 4px;}
+.tl-item{display:flex;gap:10px;padding:8px 0;border-bottom:1px solid var(--border);align-items:flex-start;}
+.tl-item:last-child{border-bottom:none;}
+.tl-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0;margin-top:4px;}
+.tl-content{flex:1;}
+.tl-event{font-size:12px;font-weight:600;}
+.tl-meta{font-size:10px;color:var(--muted);margin-top:2px;}
+/* ACTION BUTTONS */
+.ab{padding:3px 8px;border-radius:5px;border:none;font-family:inherit;font-size:10px;font-weight:600;cursor:pointer;transition:all .12s;}
+.ab-b{background:rgba(0,212,255,.15);color:var(--accent);}.ab-b:hover{background:rgba(0,212,255,.3);}
+.ab-o{background:rgba(249,115,22,.15);color:var(--orange);}.ab-o:hover{background:rgba(249,115,22,.3);}
+.ab-g{background:rgba(34,197,94,.15);color:var(--green);}.ab-g:hover{background:rgba(34,197,94,.3);}
+.ab-r{background:rgba(239,68,68,.15);color:var(--red);}.ab-r:hover{background:rgba(239,68,68,.3);}
+/* PROGRESS */
+.pb{background:var(--surface2);border-radius:4px;height:4px;overflow:hidden;margin-top:4px;}
+.pf{height:100%;border-radius:4px;}
+/* CHART */
+.cw{position:relative;height:210px;}
+.cws{position:relative;height:180px;}
+/* ALERT */
+.al{background:rgba(249,115,22,.1);border:1px solid rgba(249,115,22,.3);border-radius:8px;padding:9px 13px;font-size:12px;color:var(--orange);margin-bottom:12px;}
+/* SCROLL */
+.ac-wrap{position:relative;}
+.ac-dropdown{position:absolute;top:100%;left:0;right:0;background:var(--surface);border:1px solid var(--accent);border-radius:0 0 7px 7px;z-index:300;max-height:180px;overflow-y:auto;box-shadow:0 8px 24px rgba(0,0,0,.4);}
+.ac-item{padding:8px 11px;font-size:12px;cursor:pointer;display:flex;align-items:center;justify-content:space-between;gap:8px;}
+.ac-item:hover,.ac-item.active{background:rgba(0,212,255,.1);}
+.ac-item-label{flex:1;}
+.ac-item-sub{font-size:10px;color:var(--muted);}
+.ac-new{padding:8px 11px;font-size:11px;color:var(--green);cursor:pointer;border-top:1px solid var(--border);display:flex;align-items:center;gap:6px;font-weight:600;}
+.ac-new:hover{background:rgba(34,197,94,.1);}
+.cb-sel{width:14px;height:14px;accent-color:var(--accent);cursor:pointer;}
+.bulk-bar{display:none;align-items:center;gap:10px;padding:7px 12px;background:rgba(239,68,68,.1);border:1px solid rgba(239,68,68,.3);border-radius:7px;margin-bottom:8px;}
+.bulk-bar.show{display:flex;}
+tr.selected-row{background:rgba(239,68,68,.07);}
+.cb-row input[type=checkbox]{width:14px;height:14px;cursor:pointer;accent-color:var(--accent);}
+.bulk-bar{display:none;position:sticky;top:0;z-index:50;background:rgba(0,212,255,.1);border:1px solid var(--accent);border-radius:8px;padding:8px 14px;margin-bottom:8px;align-items:center;gap:12px;font-size:12px;}
+.bulk-bar.show{display:flex;}
+.bulk-count{font-weight:700;color:var(--accent);}
+::-webkit-scrollbar{width:4px;height:4px;}
+::-webkit-scrollbar-thumb{background:var(--border);border-radius:2px;}
+@media(max-width:1000px){.kpi-grid{grid-template-columns:repeat(3,1fr)}.g2,.g3{grid-template-columns:1fr}}
+
+/* ===== MOBILE RESPONSIVE ===== */
+@media(max-width:768px){
+  /* Hide sidebar, show bottom nav */
+  .sidebar { display:none !important; }
+  .main { margin-left:0 !important; padding-bottom:70px; }
+
+  /* Mobile topbar */
+  .topbar { padding:10px 12px !important; flex-wrap:wrap; gap:6px; }
+  .topbar-actions { gap:4px !important; flex-wrap:wrap; }
+  .topbar-actions .btn { padding:5px 8px !important; font-size:11px !important; }
+
+  /* Bottom nav */
+  #mobile-nav {
+    display:flex !important;
+    position:fixed; bottom:0; left:0; right:0; z-index:200;
+    background:var(--surface); border-top:1px solid var(--border);
+    padding-bottom:env(safe-area-inset-bottom, 8px);
+  }
+  .mnav-btn {
+    flex:1; display:flex; flex-direction:column; align-items:center;
+    padding:8px 4px 4px; gap:2px; border:none; background:none;
+    color:var(--muted); font-family:inherit; font-size:10px; cursor:pointer;
+    transition:color 0.2s; position:relative;
+  }
+  .mnav-btn .micon { font-size:20px; line-height:1.2; }
+  .mnav-btn.active { color:var(--accent); }
+  .mnav-btn .mbadge {
+    position:absolute; top:4px; right:calc(50% - 16px);
+    background:var(--red); color:#fff; font-size:9px; font-weight:700;
+    min-width:15px; height:15px; border-radius:8px;
+    display:flex; align-items:center; justify-content:center; padding:0 3px;
+  }
+
+  /* Page padding */
+  .ph { padding:12px !important; }
+  .sr { flex-wrap:wrap; gap:8px !important; }
+  .sc { min-width:80px; }
+
+  /* Tables — horizontal scroll */
+  .tw { overflow-x:auto; -webkit-overflow-scrolling:touch; }
+  table { min-width:600px; }
+  .tw table { font-size:11px; }
+
+  /* Modal */
+  .modal { margin:8px !important; max-height:92dvh !important; overflow-y:auto; }
+  .mo { align-items:flex-end !important; padding:0 !important; }
+  .modal { border-radius:16px 16px 0 0 !important; max-width:100% !important; width:100% !important; }
+
+  /* KPI grid */
+  .kpi-grid { grid-template-columns:1fr 1fr !important; }
+  .g2,.g3 { grid-template-columns:1fr !important; }
+
+  /* Action buttons in table */
+  .ab { padding:4px 6px !important; font-size:10px !important; }
+
+  /* Hide less important columns on mobile */
+  .hide-mobile { display:none !important; }
+
+  /* Form rows stack on mobile */
+  .fr { flex-direction:column !important; }
+  .fg { width:100% !important; }
+
+  /* Issue stock list */
+  #issueStockList { max-height:180px !important; }
+
+  /* Charts */
+  .cw { height:180px !important; }
+  .cws { height:150px !important; }
+
+  /* + นำเข้า Tool button shorter on mobile */
+  .btn-primary { padding:6px 10px !important; font-size:12px !important; }
+
+  /* Topbar title */
+  .page-title { font-size:14px !important; }
+}
+
+/* More menu button style */
+.mnav-more-btn {
+  display:flex; flex-direction:column; align-items:center; justify-content:center;
+  gap:4px; padding:14px 8px; border:none; background:none;
+  color:var(--text); font-family:inherit; font-size:11px; cursor:pointer;
+  border-right:0.5px solid var(--border); border-bottom:0.5px solid var(--border);
+  transition:background .15s; width:100%;
+}
+.mnav-more-btn:hover, .mnav-more-btn:active { background:var(--surface2); }
+</style>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+</head>
+<body>
+
+<!-- MOBILE BOTTOM NAV (hidden on desktop) -->
+<div id="mobile-nav" style="display:none;">
+  <button class="mnav-btn active" onclick="nav(null,'dashboard','📊 Dashboard','ภาพรวม Tool Stock'); mnavActive(this)">
+    <span class="micon">📊</span>หน้าแรก
+  </button>
+  <button class="mnav-btn" onclick="nav(null,'registry','🗂 Tool Registry','ทะเบียน Tool รายชิ้น'); mnavActive(this)">
+    <span class="micon">🗂</span>Registry
+    <span class="mbadge" id="mbdgReg" style="display:none"></span>
+  </button>
+  <button class="mnav-btn" onclick="nav(null,'buy','🛒 นำเข้า / ซื้อ','บันทึกการซื้อ Tool เข้า Stock'); mnavActive(this)">
+    <span class="micon">🛒</span>นำเข้า
+  </button>
+  <button class="mnav-btn" onclick="nav(null,'issue','📤 เบิกใช้งาน','เบิก Tool ออกจาก Stock'); mnavActive(this)">
+    <span class="micon">📤</span>เบิก
+    <span class="mbadge" id="mbdgIssue" style="display:none"></span>
+  </button>
+  <button class="mnav-btn" onclick="toggleMobileMore(this)">
+    <span class="micon">☰</span>เพิ่มเติม
+  </button>
+</div>
+
+<!-- Mobile More Menu -->
+<div id="mobile-more" style="display:none;position:fixed;bottom:70px;left:0;right:0;z-index:199;background:var(--surface);border-top:1px solid var(--border);padding:8px 0;">
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:0;">
+    <button class="mnav-more-btn" onclick="nav(null,'return','↩ คืน Tool','คืน Tool ที่ใช้แล้วกลับคลัง');closeMobileMore()">
+      <span style="font-size:22px;">↩</span><span>คืน Tool</span>
+    </button>
+    <button class="mnav-more-btn" onclick="nav(null,'reissue','♻ เบิก Used Tool','เบิก Tool ที่ผ่าน Inspect แล้ว');closeMobileMore()">
+      <span style="font-size:22px;">♻</span><span>เบิก Used</span>
+    </button>
+    <button class="mnav-more-btn" onclick="exportBackup();closeMobileMore()">
+      <span style="font-size:22px;">💾</span><span>Backup</span>
+    </button>
+    <button class="mnav-more-btn" onclick="openSyncModal();closeMobileMore()">
+      <span style="font-size:22px;">🔗</span><span>เชื่อมต่อ</span>
+    </button>
+    <button class="mnav-more-btn" onclick="syncNow();closeMobileMore()">
+      <span style="font-size:22px;">🔄</span><span>Sync</span>
+    </button>
+    <button class="mnav-more-btn" onclick="exportExcel();closeMobileMore()">
+      <span style="font-size:22px;">📊</span><span>Excel</span>
+    </button>
+  </div>
+</div>
+
+<!-- SIDEBAR -->
+<nav class="sidebar">
+  <div class="logo">
+    <div class="logo-title">⚙ CutTool MS</div>
+    <div class="logo-sub">Serial-Level Tracking · v3</div>
+  </div>
+  <div class="nav">
+    <div class="nav-sec">ภาพรวม</div>
+    <div class="nav-item active" onclick="nav(this,'dashboard','📊 Dashboard','ภาพรวม Tool Stock ทั้งหมด')">
+      <span>📊</span> Dashboard
+    </div>
+    <div class="nav-sec">Tool Registry</div>
+    <div class="nav-item" onclick="nav(this,'registry','🗂 Tool Registry','ทะเบียน Tool รายชิ้น พร้อม Serial & Status')">
+      <span>🗂</span> Tool Registry
+      <span class="badge" id="bdgReg">0</span>
+    </div>
+<div class="nav-sec">Transactions</div>
+    <div class="nav-item" onclick="nav(this,'buy','🛒 นำเข้า / ซื้อ','บันทึกการซื้อ Tool เข้า Stock')">
+      <span>🛒</span> นำเข้า / ซื้อ
+      <span class="badge" id="bdgBuy">0</span>
+    </div>
+    <div class="nav-item" onclick="nav(this,'issue','📤 เบิกใช้งาน','เบิก Tool ออกจาก Stock ไปใช้งาน')">
+      <span>📤</span> เบิกใช้งาน
+      <span class="badge yl" id="bdgIssue">0</span>
+    </div>
+    <div class="nav-item" onclick="nav(this,'return','↩ คืน Tool','คืน Tool ที่ใช้แล้วกลับคลัง')">
+      <span>↩</span> คืน Tool
+      <span class="badge og" id="bdgReturn">0</span>
+    </div>
+    <div class="nav-item" onclick="nav(this,'reissue','♻ เบิก Used Tool','เบิก Tool ที่ผ่านการ Inspect แล้วออกไปใช้ซ้ำ')">
+      <span>♻</span> เบิก Used Tool
+      <span class="badge gn" id="bdgReissue">0</span>
+    </div>
+  </div>
+  <div class="sidebar-footer">Serial Tracking · มี.ค. 2026 · v3</div>
+</nav>
+
+<!-- MAIN -->
+<div class="main">
+  <div class="topbar">
+    <div>
+      <div class="page-title" id="topTitle">📊 Dashboard</div>
+      <div class="page-sub" id="topSub">ภาพรวม Tool Stock ทั้งหมด</div>
+    </div>
+    <div class="topbar-right">
+      <span id="saveStatus" style="font-size:10px;color:var(--green);opacity:0;transition:opacity .4s;white-space:nowrap;margin-right:4px;"></span>
+      <button class="btn btn-outline hide-mobile" onclick="syncNow()" title="ดึงข้อมูลล่าสุดจาก Sheets" style="font-size:12px;">🔄 Sync</button>
+      <button class="btn btn-outline hide-mobile" onclick="openSyncModal()" style="font-size:12px;" id="syncBtn">☁️ Sync</button>
+      <button class="btn btn-outline hide-mobile" onclick="exportCSV()" style="font-size:12px;" title="Export CSV">⬇ CSV</button>
+      <button class="btn btn-outline hide-mobile" onclick="exportExcel()" style="font-size:12px;" title="Export Excel">📊 Excel</button>
+      <button class="btn btn-outline hide-mobile" onclick="exportBackup()" title="สำรองข้อมูล" style="font-size:12px;">💾 Backup</button>
+      <button class="btn btn-outline hide-mobile" onclick="importBackup()" title="นำเข้า Backup" style="font-size:12px;">📂 Restore</button>
+      <button class="btn btn-outline hide-mobile" onclick="openSyncModal()" title="ตั้งค่า Google Sheets URL" style="font-size:12px;">🔗 เชื่อมต่อ</button>
+      <button class="btn btn-outline" onclick="openModal('settings')" style="font-size:14px;" title="ตั้งค่า Prefix Serial">⚙</button>
+      <button class="btn btn-primary" onclick="openModal('buy')">+ นำเข้า Tool</button>
+    </div>
+  </div>
+
+  <div class="content">
+
+    <!-- ===== DASHBOARD ===== -->
+    <div class="page active" id="page-dashboard">
+      <div class="kpi-grid">
+        <div class="kpi">
+          <div class="kpi-icon">🗂</div>
+          <div class="kpi-label">Tool ทั้งหมด (Serial)</div>
+          <div class="kpi-val" id="dTotalSerial">0</div>
+          <div class="kpi-sub" id="dNoSerial">ไม่มี Serial 0 ชิ้น</div>
+        </div>
+        <div class="kpi gn">
+          <div class="kpi-icon">📦</div>
+          <div class="kpi-label">In Stock (พร้อมเบิก)</div>
+          <div class="kpi-val" id="dStock">0</div>
+          <div class="kpi-sub">สถานะ stock</div>
+        </div>
+        <div class="kpi yl">
+          <div class="kpi-icon">🔧</div>
+          <div class="kpi-label">In Use (กำลังใช้)</div>
+          <div class="kpi-val" id="dInUse">0</div>
+          <div class="kpi-sub">ออกไปแผนก</div>
+        </div>
+        <div class="kpi og">
+          <div class="kpi-icon">🔄</div>
+          <div class="kpi-label">Used / รอ Inspect</div>
+          <div class="kpi-val" id="dUsed">0</div>
+          <div class="kpi-sub" id="dInspect">รอตรวจ 0 / ใช้ซ้ำได้ 0</div>
+        </div>
+        <div class="kpi pu">
+          <div class="kpi-icon">❌</div>
+          <div class="kpi-label">Scrapped</div>
+          <div class="kpi-val" id="dScrap">0</div>
+          <div class="kpi-sub">หมดอายุ</div>
+        </div>
+      </div>
+
+      <!-- Lifecycle Flow -->
+      <div class="card">
+        <div class="card-hd"><div class="card-title">🔁 Tool Lifecycle (Serial-Level)</div></div>
+        <div class="card-body">
+          <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-bottom:12px;">
+            <div style="background:var(--surface2);border:1px solid var(--accent);border-radius:8px;padding:7px 12px;font-size:11px;font-weight:600;color:var(--accent);">🛒 ซื้อเข้า<br><span style="font-size:9px;color:var(--muted);">+Serial (หรือ N/A)</span></div>
+            <div style="color:var(--muted);">→</div>
+            <div style="background:var(--surface2);border:1px solid var(--green);border-radius:8px;padding:7px 12px;font-size:11px;font-weight:600;color:var(--green);">📦 Stock<br><span style="font-size:9px;color:var(--muted);">พร้อมเบิก</span></div>
+            <div style="color:var(--muted);">→</div>
+            <div style="background:var(--surface2);border:1px solid var(--yellow);border-radius:8px;padding:7px 12px;font-size:11px;font-weight:600;color:var(--yellow);">🔧 In Use<br><span style="font-size:9px;color:var(--muted);">ออกไปแผนก</span></div>
+            <div style="color:var(--muted);">→</div>
+            <div style="background:var(--surface2);border:1px solid var(--orange);border-radius:8px;padding:7px 12px;font-size:11px;font-weight:600;color:var(--orange);">↩ คืน<br><span style="font-size:9px;color:var(--muted);">+ ระบุสภาพ</span></div>
+            <div style="color:var(--muted);">→</div>
+            <div style="background:var(--surface2);border:1px solid var(--accent2);border-radius:8px;padding:7px 12px;font-size:11px;font-weight:600;color:#a78bfa;">🔍 Inspect<br><span style="font-size:9px;color:var(--muted);">รอตรวจสอบ</span></div>
+            <div style="color:var(--muted);">→</div>
+            <div style="background:var(--surface2);border:1px solid var(--green);border-radius:8px;padding:7px 12px;font-size:11px;font-weight:600;color:var(--green);">✓ Used OK<br><span style="font-size:9px;color:var(--muted);">เบิกซ้ำได้</span></div>
+            <div style="color:var(--muted);">/</div>
+            <div style="background:var(--surface2);border:1px solid var(--red);border-radius:8px;padding:7px 12px;font-size:11px;font-weight:600;color:var(--red);">❌ Scrap<br><span style="font-size:9px;color:var(--muted);">ทิ้ง</span></div>
+          </div>
+          <div style="font-size:11px;color:var(--muted);">⚡ Tool ที่ไม่มี Serial จะถูก track ในระดับ qty แทน · Serial สามารถเพิ่มภายหลังได้</div>
+        </div>
+      </div>
+
+      <div class="g3">
+        <div class="card">
+          <div class="card-hd"><div class="card-title">Tool Status Distribution</div></div>
+          <div class="card-body"><div class="cw"><canvas id="cStatus"></canvas></div></div>
+        </div>
+        <div class="card">
+          <div class="card-hd"><div class="card-title">สัดส่วนประเภท Tool</div></div>
+          <div class="card-body">
+            <div class="cws"><canvas id="cType"></canvas></div>
+            <div id="typeLeg" style="margin-top:8px;display:flex;flex-direction:column;gap:4px;"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── มูลค่า Tool รายเดือน ── -->
+      <div class="card">
+        <div class="card-hd">
+          <div class="card-title">💰 สรุปมูลค่า Tool ที่ใช้งาน</div>
+          <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
+            <select id="costYear" onchange="renderCostSummary()" style="font-size:11px;padding:4px 8px;border-radius:6px;border:1px solid var(--border);background:var(--surface2);color:var(--fg);">
+            </select>
+            <select id="costView" onchange="renderCostSummary()" style="font-size:11px;padding:4px 8px;border-radius:6px;border:1px solid var(--border);background:var(--surface2);color:var(--fg);">
+              <option value="both">ชิ้น + มูลค่า</option>
+              <option value="qty">จำนวนชิ้น</option>
+              <option value="cost">มูลค่า (฿)</option>
+            </select>
+          </div>
+        </div>
+        <!-- KPI row -->
+        <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:14px;" id="costKpiRow"></div>
+        <!-- Chart -->
+        <div style="display:flex;gap:16px;flex-wrap:wrap;">
+          <div style="flex:1;min-width:260px;height:220px;position:relative;">
+            <canvas id="cCost"></canvas>
+          </div>
+          <div id="costLegend" style="min-width:160px;display:flex;flex-direction:column;gap:4px;justify-content:center;"></div>
+        </div>
+        <!-- Monthly table -->
+        <div id="costTable" style="margin-top:12px;overflow-x:auto;"></div>
+      </div>
+
+      <div class="card">
+        <div class="card-hd">
+          <div class="card-title">📊 สรุปการเบิกรายการ Tool</div>
+          <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
+            <input list="deptChartToolList" id="deptChartTool" onchange="renderDeptChart()" oninput="renderDeptChart()"
+              placeholder="🔍 ค้นหา Tool..."
+              style="font-size:11px;padding:4px 8px;border-radius:6px;border:1px solid var(--border);background:var(--surface2);color:var(--fg);max-width:220px;">
+            <datalist id="deptChartToolList"></datalist>
+            <select id="deptChartMonth" onchange="renderDeptChart()" style="font-size:11px;padding:4px 8px;border-radius:6px;border:1px solid var(--border);background:var(--surface2);color:var(--fg);">
+              <option value="">— ทุกเดือน —</option>
+            </select>
+            <select id="deptChartMode" onchange="renderDeptChart()" style="font-size:11px;padding:4px 8px;border-radius:6px;border:1px solid var(--border);background:var(--surface2);color:var(--fg);">
+              <option value="dept">แยกตามแผนก</option>
+              <option value="month">แยกตามเดือน</option>
+            </select>
+          </div>
+        </div>
+        <div class="card-body" style="display:flex;gap:16px;flex-wrap:wrap;">
+          <div style="flex:1;min-width:260px;min-height:220px;position:relative;">
+            <canvas id="cDept"></canvas>
+          </div>
+          <div id="deptLegend" style="min-width:180px;display:flex;flex-direction:column;gap:5px;justify-content:center;"></div>
+        </div>
+        <div id="deptTable" style="margin-top:8px;overflow-x:auto;"></div>
+      </div>
+
+      <div class="card">
+        <div class="card-hd"><div class="card-title">🕐 Transaction ล่าสุด</div><span class="tag tb" id="recentCount">0 รายการ</span></div>
+        <div class="tw"><table>
+          <thead><tr><th>วันที่</th><th>Event</th><th>Tool</th><th>Serial</th><th>แผนก/Supplier</th><th>ผู้ดำเนินการ</th></tr></thead>
+          <tbody id="recentBody"></tbody>
+        </table></div>
+      </div>
+    </div>
+
+    <!-- ===== TOOL REGISTRY ===== -->
+    <div class="page" id="page-registry">
+      <div class="sr">
+        <div class="sc"><div class="sc-label">Tool ทั้งหมด</div><div class="sc-val" id="regTotal">0</div></div>
+        <div class="sc"><div class="sc-label" style="color:var(--green)">📦 In Stock</div><div class="sc-val" style="color:var(--green)" id="regStock">0</div></div>
+        <div class="sc"><div class="sc-label" style="color:var(--yellow)">🔧 In Use</div><div class="sc-val" style="color:var(--yellow)" id="regInUse">0</div></div>
+        <div class="sc"><div class="sc-label" style="color:var(--orange)">↩ Used</div><div class="sc-val" style="color:var(--orange)" id="regUsed">0</div></div>
+        <div class="sc"><div class="sc-label" style="color:#a78bfa">🔍 Inspect</div><div class="sc-val" style="color:#a78bfa" id="regInspect">0</div></div>
+        <div class="sc"><div class="sc-label" style="color:var(--red)">❌ Scrap</div><div class="sc-val" style="color:var(--red)" id="regScrap">0</div></div>
+      </div>
+      <div class="bulk-bar" id="bulk-bar-reg">
+          <span style="font-size:12px;font-weight:600;color:var(--red);">🗑 เลือก <span id="bulk-cnt-reg">0</span> รายการ</span>
+          <button class="btn" style="background:var(--red);color:#fff;padding:4px 12px;font-size:11px;" onclick="bulkDelete('reg')">ลบที่เลือก</button>
+          <button class="btn btn-outline" style="padding:4px 10px;font-size:11px;" onclick="clearSel('reg')">ยกเลิก</button>
+        </div>
+      <div class="fb">
+        <input class="si" type="text" id="regSearch" placeholder="🔍 ค้นหา Serial, ชื่อ Tool..." oninput="renderRegistry()">
+        <select class="fs" id="regTypeF" onchange="renderRegistry()"><option value="">ทุกประเภท</option></select>
+        <select class="fs" id="regStatusF" onchange="renderRegistry()">
+          <option value="">ทุก Status</option>
+          <option value="stock">📦 In Stock</option>
+          <option value="inuse">🔧 In Use</option>
+          <option value="used_inspect">🔍 Inspect</option>
+          <option value="used_ok">✓ Used OK</option>
+          <option value="scrapped">❌ Scrapped</option>
+        </select>
+        <select class="fs" id="regSerialF" onchange="renderRegistry()">
+          <option value="">มี Serial / ไม่มี</option>
+          <option value="yes">มี Serial</option>
+          <option value="no">ไม่มี Serial</option>
+        </select>
+      </div>
+      <div class="card">
+        <div class="card-hd">
+          <div style="display:flex;align-items:center;gap:10px;">
+            <div class="card-title" id="regCardTitle">🗂 Tool Registry</div>
+            <!-- View toggle -->
+            <div style="display:flex;background:var(--surface2);border:1px solid var(--border);border-radius:7px;overflow:hidden;">
+              <button id="regViewGroup" onclick="setRegView('group')"
+                style="padding:4px 10px;border:none;font-family:inherit;font-size:10px;font-weight:600;cursor:pointer;background:var(--accent);color:#000;transition:all .12s;">
+                📋 Summary
+              </button>
+              <button id="regViewSerial" onclick="setRegView('serial')"
+                style="padding:4px 10px;border:none;font-family:inherit;font-size:10px;font-weight:600;cursor:pointer;background:transparent;color:var(--muted);transition:all .12s;">
+                🔩 รายชิ้น
+              </button>
+            </div>
+          </div>
+          <span class="tag tb" id="regCount">0 รายการ</span>
+        </div>
+
+        <!-- SERIAL VIEW -->
+        <div id="regSerialView">
+          <div class="tw"><table>
+            <thead><tr><th><input type="checkbox" class="cb-sel" id="cb-all-reg" onchange="toggleSelAll('reg',this)"></th><th>#</th><th>รายการ Tool</th><th>ประเภท</th><th>Serial</th><th>แบรนด์</th><th>Status</th><th>ตำแหน่ง/ผู้ถือ</th><th>ซื้อเมื่อ</th></tr></thead>
+            <tbody id="regBody"></tbody>
+          </table></div>
+        </div>
+
+        <!-- GROUP / SUMMARY VIEW -->
+        <div id="regGroupView" style="display:none;">
+          <div class="tw"><table>
+            <thead><tr>
+              <th>#</th>
+              <th>ประเภท</th>
+              <th>รายการ</th>
+              <th style="text-align:right;">ราคาต่อหน่วย</th>
+              <th style="text-align:center;">หน่วยนับ</th>
+              <th style="text-align:center;color:var(--accent);">จำนวนสินค้าคงเหลือ</th>
+              <th style="text-align:right;color:var(--green);">มูลค่าสินค้าคงเหลือ</th>
+            </tr></thead>
+            <tbody id="regGroupBody"></tbody>
+            <tfoot id="regGroupFoot"></tfoot>
+          </table></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ===== BUY ===== -->
+    <div class="page" id="page-buy">
+      <div class="al">🛒 บันทึกการซื้อ Tool — แต่ละชิ้นที่มี Serial จะสร้าง entry ใน Tool Registry อัตโนมัติ</div>
+      <div class="sr">
+        <div class="sc"><div class="sc-label">Transaction ทั้งหมด</div><div class="sc-val" id="buyTotal">0</div></div>
+        <div class="sc"><div class="sc-label">Tool ที่มี Serial</div><div class="sc-val" id="buyWithSerial">0</div></div>
+        <div class="sc"><div class="sc-label">Tool ไม่มี Serial</div><div class="sc-val" id="buyNoSerial">0</div></div>
+      </div>
+      <div class="bulk-bar" id="bulk-bar-buy">
+          <span style="font-size:12px;font-weight:600;color:var(--red);">🗑 เลือก <span id="bulk-cnt-buy">0</span> รายการ</span>
+          <button class="btn" style="background:var(--red);color:#fff;padding:4px 12px;font-size:11px;" onclick="bulkDelete('buy')">ลบที่เลือก</button>
+          <button class="btn btn-outline" style="padding:4px 10px;font-size:11px;" onclick="clearSel('buy')">ยกเลิก</button>
+        </div>
+      <div class="fb">
+        <input class="si" type="text" id="buySearch" placeholder="🔍 ค้นหา Serial, ชื่อ, Supplier..." oninput="renderBuy()">
+        <select class="fs" id="buyTypeF" onchange="renderBuy()"><option value="">ทุกประเภท</option></select>
+        <button class="btn btn-primary" onclick="openModal('buy')">+ นำเข้า Tool</button>
+      </div>
+      <div class="bulk-bar" id="bulk-buy">
+        <input type="checkbox" id="chk-buy-all" onchange="toggleAll('buy',this.checked)" style="width:14px;height:14px;accent-color:var(--accent);">
+        <span>เลือกทั้งหมด</span>
+        <span class="bulk-count" id="bulk-buy-count">0 รายการ</span>
+        <button class="btn btn-outline" style="padding:4px 12px;font-size:11px;color:var(--red);border-color:var(--red);" onclick="bulkDeleteTxn('buy')">🗑 ลบที่เลือก</button>
+        <button class="btn btn-outline" style="padding:4px 10px;font-size:11px;" onclick="clearSel('buy')">✕ ยกเลิก</button>
+      </div>
+      <div class="card">
+        <div class="card-hd"><div class="card-title">🛒 Transaction นำเข้า / ซื้อ</div><span class="tag tb" id="buyCount">0 รายการ</span></div>
+        <div class="tw"><table>
+          <thead><tr><th><input type="checkbox" class="cb-sel" id="cb-all-buy" onchange="toggleSelAll('buy',this)"></th><th>TxnID</th><th>วันที่</th><th>ประเภท</th><th>รายการ Tool</th><th>Serial</th><th>Qty</th><th>Supplier</th><th>ราคา/ชิ้น</th><th></th></tr></thead>
+          <tbody id="buyBody"></tbody>
+        </table></div>
+      </div>
+    </div>
+
+    <!-- ===== ISSUE ===== -->
+    <div class="page" id="page-issue">
+      <div class="sr">
+        <div class="sc"><div class="sc-label">Transaction ทั้งหมด</div><div class="sc-val" id="issueTotal">0</div></div>
+        <div class="sc"><div class="sc-label">In Use ปัจจุบัน</div><div class="sc-val" id="issueInUse">0</div></div>
+        <div class="sc"><div class="sc-label">Dept Repeat</div><div class="sc-val" id="issueDeptR">0</div></div>
+        <div class="sc"><div class="sc-label">Dept MC&CL</div><div class="sc-val" id="issueDeptM">0</div></div>
+      </div>
+      <div class="bulk-bar" id="bulk-bar-issue">
+          <span style="font-size:12px;font-weight:600;color:var(--red);">🗑 เลือก <span id="bulk-cnt-issue">0</span> รายการ</span>
+          <button class="btn" style="background:var(--red);color:#fff;padding:4px 12px;font-size:11px;" onclick="bulkDelete('issue')">ลบที่เลือก</button>
+          <button class="btn btn-outline" style="padding:4px 10px;font-size:11px;" onclick="clearSel('issue')">ยกเลิก</button>
+        </div>
+      <div class="fb">
+        <input class="si" type="text" id="issueSearch" placeholder="🔍 ค้นหา Serial, ชื่อ Tool..." oninput="renderIssue()">
+        <select class="fs" id="issueDeptFilter" onchange="renderIssue()">
+          <option value="">ทุกแผนก</option><option value="Repeat">Repeat</option><option value="MC&CL">MC&CL</option>
+        </select>
+        <button class="btn btn-yellow" onclick="openModal('issue')">📤 เบิก Tool</button>
+      </div>
+      <div class="bulk-bar" id="bulk-issue">
+        <input type="checkbox" id="chk-issue-all" onchange="toggleAll('issue',this.checked)" style="width:14px;height:14px;accent-color:var(--accent);">
+        <span>เลือกทั้งหมด</span>
+        <span class="bulk-count" id="bulk-issue-count">0 รายการ</span>
+        <button class="btn btn-outline" style="padding:4px 12px;font-size:11px;color:var(--red);border-color:var(--red);" onclick="bulkDeleteTxn('issue')">🗑 ลบที่เลือก</button>
+        <button class="btn btn-outline" style="padding:4px 10px;font-size:11px;" onclick="clearSel('issue')">✕ ยกเลิก</button>
+      </div>
+      <div class="card">
+        <div class="card-hd"><div class="card-title">📤 Transaction เบิกใช้งาน</div><span class="tag ty" id="issueCount">0 รายการ</span></div>
+        <div class="tw"><table>
+          <thead><tr><th><input type="checkbox" class="cb-sel" id="cb-all-issue" onchange="toggleSelAll('issue',this)"></th><th>TxnID</th><th>วันที่</th><th>ประเภท</th><th>รายการ Tool</th><th>Serial</th><th>Qty</th><th>แผนก</th><th>ผู้เบิก</th><th>Action Type</th><th></th></tr></thead>
+          <tbody id="issueBody"></tbody>
+        </table></div>
+      </div>
+    </div>
+
+    <!-- ===== RETURN ===== -->
+    <div class="page" id="page-return">
+      <div class="sr">
+        <div class="sc"><div class="sc-label">คืนทั้งหมด</div><div class="sc-val" id="retTotal">0</div></div>
+        <div class="sc"><div class="sc-label" style="color:#a78bfa">รอ Inspect</div><div class="sc-val" style="color:#a78bfa" id="retInspect">0</div></div>
+        <div class="sc"><div class="sc-label" style="color:var(--green)">ผ่าน Inspect</div><div class="sc-val" style="color:var(--green)" id="retOK">0</div></div>
+        <div class="sc"><div class="sc-label" style="color:var(--red)">Scrapped</div><div class="sc-val" style="color:var(--red)" id="retScrap">0</div></div>
+      </div>
+      <div class="bulk-bar" id="bulk-bar-ret">
+          <span style="font-size:12px;font-weight:600;color:var(--red);">🗑 เลือก <span id="bulk-cnt-ret">0</span> รายการ</span>
+          <button class="btn" style="background:var(--red);color:#fff;padding:4px 12px;font-size:11px;" onclick="bulkDelete('ret')">ลบที่เลือก</button>
+          <button class="btn btn-outline" style="padding:4px 10px;font-size:11px;" onclick="clearSel('ret')">ยกเลิก</button>
+        </div>
+      <div class="fb">
+        <input class="si" type="text" id="retSearch" placeholder="🔍 ค้นหา Serial, ชื่อ Tool..." oninput="renderReturn()">
+        <select class="fs" id="retStatusF" onchange="renderReturn()">
+          <option value="">ทุก Status</option>
+          <option value="used_inspect">🔍 รอ Inspect</option>
+          <option value="used_ok">✓ ผ่าน</option>
+          <option value="scrapped">❌ Scrap</option>
+        </select>
+        <button class="btn btn-orange" onclick="openModal('return')">↩ บันทึกคืน Tool</button>
+      </div>
+      <div class="bulk-bar" id="bulk-return">
+        <input type="checkbox" id="chk-return-all" onchange="toggleAll('return',this.checked)" style="width:14px;height:14px;accent-color:var(--accent);">
+        <span>เลือกทั้งหมด</span>
+        <span class="bulk-count" id="bulk-return-count">0 รายการ</span>
+        <button class="btn btn-outline" style="padding:4px 12px;font-size:11px;color:var(--red);border-color:var(--red);" onclick="bulkDeleteTxn('return')">🗑 ลบที่เลือก</button>
+        <button class="btn btn-outline" style="padding:4px 10px;font-size:11px;" onclick="clearSel('return')">✕ ยกเลิก</button>
+      </div>
+      <div class="card">
+        <div class="card-hd"><div class="card-title">↩ Transaction คืน Tool</div><span class="tag to" id="retCount">0 รายการ</span></div>
+        <div class="tw"><table>
+          <thead><tr><th><input type="checkbox" class="cb-sel" id="cb-all-ret" onchange="toggleSelAll('ret',this)"></th><th>TxnID</th><th>วันที่คืน</th><th>ประเภท</th><th>รายการ Tool</th><th>Serial</th><th>Qty</th><th>แผนก</th><th>ผู้คืน</th><th>สภาพ / Inspect</th><th>หมายเหตุ</th><th></th></tr></thead>
+          <tbody id="retBody"></tbody>
+        </table></div>
+      </div>
+    </div>
+
+    <!-- ===== RE-ISSUE ===== -->
+    <div class="page" id="page-reissue">
+      <div class="al">♻ เบิก Used Tool — เฉพาะ Tool ที่ผ่าน Inspect แล้ว (สถานะ "✓ Used OK") เท่านั้น</div>
+      <div class="sr">
+        <div class="sc"><div class="sc-label">เบิก Used ทั้งหมด</div><div class="sc-val" id="riTotal">0</div></div>
+        <div class="sc"><div class="sc-label">Used OK พร้อมเบิก</div><div class="sc-val" id="riAvail">0</div></div>
+        <div class="sc"><div class="sc-label" style="color:var(--green)">ประหยัดได้</div><div class="sc-val" style="color:var(--green)" id="riSaving">฿0</div></div>
+      </div>
+      <div class="bulk-bar" id="bulk-bar-ri">
+          <span style="font-size:12px;font-weight:600;color:var(--red);">🗑 เลือก <span id="bulk-cnt-ri">0</span> รายการ</span>
+          <button class="btn" style="background:var(--red);color:#fff;padding:4px 12px;font-size:11px;" onclick="bulkDelete('ri')">ลบที่เลือก</button>
+          <button class="btn btn-outline" style="padding:4px 10px;font-size:11px;" onclick="clearSel('ri')">ยกเลิก</button>
+        </div>
+      <div class="fb">
+        <input class="si" type="text" id="riSearch" placeholder="🔍 ค้นหา Serial, ชื่อ Tool..." oninput="renderReissue()">
+        <select class="fs" id="riDeptF" onchange="renderReissue()">
+          <option value="">ทุกแผนก</option><option value="Repeat">Repeat</option><option value="MC&CL">MC&CL</option>
+        </select>
+        <button class="btn btn-green" onclick="openModal('reissue')">♻ เบิก Used Tool</button>
+      </div>
+      <div class="bulk-bar" id="bulk-reissue">
+        <input type="checkbox" id="chk-reissue-all" onchange="toggleAll('reissue',this.checked)" style="width:14px;height:14px;accent-color:var(--accent);">
+        <span>เลือกทั้งหมด</span>
+        <span class="bulk-count" id="bulk-reissue-count">0 รายการ</span>
+        <button class="btn btn-outline" style="padding:4px 12px;font-size:11px;color:var(--red);border-color:var(--red);" onclick="bulkDeleteTxn('reissue')">🗑 ลบที่เลือก</button>
+        <button class="btn btn-outline" style="padding:4px 10px;font-size:11px;" onclick="clearSel('reissue')">✕ ยกเลิก</button>
+      </div>
+      <div class="card">
+        <div class="card-hd"><div class="card-title">♻ Transaction เบิก Used Tool</div><span class="tag tg" id="riCount">0 รายการ</span></div>
+        <div class="tw"><table>
+          <thead><tr><th><input type="checkbox" class="cb-sel" id="cb-all-ri" onchange="toggleSelAll('ri',this)"></th><th>TxnID</th><th>วันที่</th><th>ประเภท</th><th>รายการ Tool</th><th>Serial</th><th>Qty</th><th>แผนก</th><th>ผู้เบิก</th><th>ประหยัด</th><th></th></tr></thead>
+          <tbody id="riBody"></tbody>
+        </table></div>
+      </div>
+    </div>
+
+  </div><!-- /content -->
+</div><!-- /main -->
+
+<!-- ===== MODAL: BUY ===== -->
+<div class="mo" id="mo-buy">
+  <div class="modal">
+    <div class="mt">🛒 บันทึกนำเข้า / ซื้อ Tool</div>
+    <div class="fr">
+      <div class="fg"><label class="fl">วันที่ซื้อ</label><input class="fi" type="date" id="b-date"></div>
+      <div class="fg"><label class="fl">Supplier</label>
+        <div class="ac-wrap">
+          <input class="fi" type="text" id="b-supplier" placeholder="พิมพ์หรือเลือก Supplier..." autocomplete="off"
+            oninput="acShow('supplier',this.value)" onfocus="acShow('supplier',this.value)" onkeydown="acKey(event,'supplier')">
+          <div class="ac-dropdown" id="ac-supplier" style="display:none;"></div>
+        </div></div>
+    </div>
+    <div class="fr">
+      <div class="fg"><label class="fl">ประเภท Tool</label>
+        <select class="fi" id="b-type">
+          <option>Insert</option><option>Endmill</option><option>Tap</option><option>Drill</option>
+          <option>Ball</option><option>Reamer</option><option>Chamfer</option><option>Spot Drill</option>
+          <option>THREAD MILL</option><option>U-DRILL</option><option>screw</option>
+          <option>center drill</option><option>ลวด wire cut</option><option>Back Chamfer</option>
+        </select>
+      </div>
+      <div class="fg"><label class="fl">แบรนด์</label>
+        <div class="ac-wrap">
+          <input class="fi" type="text" id="b-brand" placeholder="พิมพ์หรือเลือกแบรนด์..." autocomplete="off"
+            oninput="acShow('brand',this.value);document.getElementById('b-brandCode').value='';previewSerials();" onfocus="acShow('brand',this.value)" onkeydown="acKey(event,'brand')">
+          <div class="ac-dropdown" id="ac-brand" style="display:none;"></div>
+        </div></div>
+    </div>
+    <div class="fg"><label class="fl">ชื่อ Tool</label>
+    <div class="ac-wrap">
+      <input class="fi" type="text" id="b-name" placeholder="พิมพ์หรือเลือกชื่อ Tool..." autocomplete="off"
+        oninput="acShow('name',this.value);document.getElementById('b-itemCode').value='';previewSerials();"
+        onfocus="acShow('name',this.value)" onkeydown="acKey(event,'name')">
+      <div class="ac-dropdown" id="ac-name" style="display:none;"></div>
+    </div></div>
+    <div style="border-top:1px solid var(--border);margin:12px 0;"></div>
+
+    <!-- Serial mode selector -->
+    <div style="display:flex;gap:6px;margin-bottom:12px;">
+      <button id="bsm-auto" onclick="setBuySerialMode('auto')"
+        style="flex:1;padding:7px;border-radius:7px;border:2px solid var(--accent);background:rgba(0,212,255,.12);color:var(--accent);font-family:inherit;font-size:11px;font-weight:600;cursor:pointer;">
+        ✨ Auto Generate
+        <div style="font-size:9px;font-weight:400;color:var(--muted);margin-top:1px;">ระบบออก Serial ให้อัตโนมัติ</div>
+      </button>
+      <button id="bsm-manual" onclick="setBuySerialMode('manual')"
+        style="flex:1;padding:7px;border-radius:7px;border:2px solid var(--border);background:transparent;color:var(--muted);font-family:inherit;font-size:11px;font-weight:600;cursor:pointer;">
+        ✏️ กรอกเอง
+        <div style="font-size:9px;font-weight:400;margin-top:1px;">ใส่ Serial ทีละชิ้น</div>
+      </button>
+      <button id="bsm-none" onclick="setBuySerialMode('none')"
+        style="flex:1;padding:7px;border-radius:7px;border:2px solid var(--border);background:transparent;color:var(--muted);font-family:inherit;font-size:11px;font-weight:600;cursor:pointer;">
+        🚫 ไม่มี Serial
+        <div style="font-size:9px;font-weight:400;margin-top:1px;">ระบุ qty แทน</div>
+      </button>
+    </div>
+
+    <!-- AUTO GENERATE mode -->
+    <div id="b-modeAuto">
+      <div style="background:var(--surface2);border:1px solid var(--border);border-radius:7px;padding:10px 12px;margin-bottom:10px;font-size:11px;">
+        <div style="color:var(--muted);font-size:10px;margin-bottom:4px;">📐 Format ที่ใช้</div>
+        <div class="mono" style="color:var(--accent);font-size:13px;font-weight:700;" id="b-formatHint">TYPE-YY-ITEM-BRAND-####</div>
+        <div style="color:var(--muted);font-size:10px;margin-top:3px;">ระบบดึง TYPE, ITEM, BRAND จากข้อมูล Tool อัตโนมัติ — แก้ได้ก่อน save</div>
+      </div>
+      <div class="fr">
+        <div class="fg">
+          <label class="fl">ส่วน ITEM <span style="color:var(--muted);">(auto — แก้ได้)</span></label>
+          <input class="fi" type="text" id="b-itemCode" placeholder="เช่น DIA10" style="font-family:'JetBrains Mono',monospace;text-transform:uppercase;" oninput="this.value=this.value.toUpperCase();previewSerials()">
+        </div>
+        <div class="fg">
+          <label class="fl">ส่วน BRAND <span style="color:var(--muted);">(auto — แก้ได้)</span></label>
+          <input class="fi" type="text" id="b-brandCode" placeholder="เช่น 7L, KYO" style="font-family:'JetBrains Mono',monospace;text-transform:uppercase;" oninput="this.value=this.value.toUpperCase();previewSerials()">
+        </div>
+      </div>
+      <div class="fg">
+        <label class="fl">จำนวนชิ้นที่ซื้อ</label>
+        <input class="fi" type="number" id="b-autoQty" value="1" min="1" max="100" oninput="previewSerials()">
+      </div>
+      <div style="background:var(--surface2);border:1px solid var(--border);border-radius:7px;padding:10px 12px;font-size:11px;margin-bottom:6px;">
+        <div style="color:var(--muted);margin-bottom:6px;font-size:10px;">✨ Serial ที่จะสร้าง:</div>
+        <div id="b-serialPreview" style="display:flex;flex-wrap:wrap;gap:5px;min-height:22px;"></div>
+      </div>
+      <div style="font-size:10px;color:var(--muted);">เลขลำดับนับแยกต่อรายการ และขึ้น 0001 ใหม่ทุกปี</div>
+    </div>
+
+    <!-- MANUAL mode -->
+    <div id="b-modeManual" style="display:none;">
+      <div class="fg">
+        <label class="fl">เพิ่ม Serial (กด Enter หรือ +)</label>
+        <div style="display:flex;gap:6px;">
+          <input class="fi" type="text" id="b-serialInput" placeholder="เช่น EM-26-0001" onkeydown="if(event.key==='Enter'){addSerial();event.preventDefault()}" style="flex:1;">
+          <button onclick="addSerial()" class="btn btn-primary" style="padding:7px 10px;">+</button>
+        </div>
+      </div>
+      <div id="b-serialList" style="display:flex;flex-wrap:wrap;gap:6px;min-height:28px;padding:4px 0;"></div>
+      <div style="font-size:10px;color:var(--muted);" id="b-serialCount">0 Serial</div>
+    </div>
+
+    <!-- NO SERIAL / QTY mode -->
+    <div id="b-modeNone" style="display:none;">
+      <div class="fr">
+        <div class="fg"><label class="fl">จำนวน (Qty)</label><input class="fi" type="number" id="b-qty" value="1" min="1"></div>
+        <div class="fg"><label class="fl">หน่วย</label><input class="fi" type="text" id="b-unit" value="PCS"></div>
+      </div>
+    </div>
+    <div class="fr" style="margin-top:6px;">
+      <div class="fg"><label class="fl">ราคาต่อชิ้น (฿)</label><input class="fi" type="number" id="b-price" value="0" min="0"></div>
+      <div class="fg"><label class="fl">หมายเหตุ</label><input class="fi" type="text" id="b-note" placeholder="ไม่บังคับ"></div>
+    </div>
+    <!-- รูปภาพ -->
+    <div class="fr" style="margin-top:6px;gap:10px;">
+      <div class="fg">
+        <label class="fl">📄 รูปใบเบิก</label>
+        <div id="b-receipt-area" onclick="document.getElementById('b-receipt-input').click()"
+          style="border:2px dashed var(--border);border-radius:8px;padding:10px;text-align:center;cursor:pointer;min-height:70px;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:4px;background:var(--surface2);">
+          <div id="b-receipt-preview" style="display:none;"><img id="b-receipt-img" style="max-height:80px;max-width:100%;border-radius:6px;"></div>
+          <div id="b-receipt-placeholder" style="color:var(--muted);font-size:12px;">📷 คลิกเพื่อเลือกรูป</div>
+        </div>
+        <input type="file" id="b-receipt-input" accept="image/*" style="display:none" onchange="previewImage('b-receipt')">
+      </div>
+      <div class="fg">
+        <label class="fl">🔧 รูป Tool</label>
+        <div id="b-tool-area" onclick="document.getElementById('b-tool-input').click()"
+          style="border:2px dashed var(--border);border-radius:8px;padding:10px;text-align:center;cursor:pointer;min-height:70px;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:4px;background:var(--surface2);">
+          <div id="b-tool-preview" style="display:none;"><img id="b-tool-img" style="max-height:80px;max-width:100%;border-radius:6px;"></div>
+          <div id="b-tool-placeholder" style="color:var(--muted);font-size:12px;">📷 คลิกเพื่อเลือกรูป</div>
+        </div>
+        <input type="file" id="b-tool-input" accept="image/*" style="display:none" onchange="previewImage('b-tool')">
+      </div>
+    </div>
+    <div id="b-upload-status" style="font-size:11px;color:var(--muted);text-align:center;min-height:16px;"></div>
+    <div class="mf">
+      <button class="btn btn-outline" onclick="closeModal('buy')">ยกเลิก</button>
+      <button class="btn btn-primary" onclick="submitBuy()">✓ บันทึกนำเข้า</button>
+    </div>
+  </div>
+</div>
+
+<!-- ===== MODAL: ISSUE ===== -->
+<div class="mo" id="mo-issue">
+  <div class="modal" style="max-width:600px;">
+    <div class="mt">📤 เบิก Tool ออกใช้งาน</div>
+    <div class="fb" style="margin-bottom:8px;">
+      <input class="si" type="text" id="iss-filter" placeholder="🔍 กรอง Tool..." oninput="renderIssueStockList()">
+      <select class="fs" id="iss-typeFilter" onchange="renderIssueStockList()"><option value="">ทุกประเภท</option></select>
+    </div>
+    <div id="issueStockList" style="max-height:220px;overflow-y:auto;border:1px solid var(--border);border-radius:8px;margin-bottom:8px;"></div>
+    <!-- selected basket -->
+    <div id="issueBasket" style="display:none;background:rgba(245,158,11,.07);border:1px solid rgba(245,158,11,.25);border-radius:8px;padding:8px 12px;margin-bottom:12px;">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
+        <span style="font-size:11px;font-weight:600;color:var(--yellow);">📋 รายการที่เลือก (<span id="issBasketCount">0</span> ชิ้น)</span>
+        <button onclick="issClearAll()" style="font-size:10px;color:var(--muted);background:none;border:none;cursor:pointer;">ล้างทั้งหมด</button>
+      </div>
+      <div id="issBasketItems" style="display:flex;flex-wrap:wrap;gap:5px;"></div>
+    </div>
+    <div id="issueSelectedInfo" style="display:none;"></div>
+    <div class="fr">
+      <div class="fg"><label class="fl">วันที่เบิก</label><input class="fi" type="date" id="iss-date"></div>
+      <div class="fg"><label class="fl">แผนก</label>
+          <input list="iss-dept-list" class="fi" id="iss-dept" placeholder="พิมพ์หรือเลือก">
+          <datalist id="iss-dept-list"></datalist>
+        </div>
+    </div>
+    <div class="fr">
+      <div class="fg"><label class="fl">ผู้เบิก</label>
+        <input list="iss-person-list" class="fi" type="text" id="iss-person" placeholder="พิมพ์หรือเลือก">
+        <datalist id="iss-person-list"></datalist>
+      </div>
+      <div class="fg"><label class="fl">ประเภทการเบิก</label>
+        <select class="fi" id="iss-action" onchange="toggleIssueType()">
+          <option value="เบิกเพิ่ม">เบิกเพิ่ม</option>
+          <option value="เปลี่ยน">เปลี่ยน Tool</option>
+        </select>
+      </div>
+    </div>
+    <!-- ช่อง Serial เก่า (แสดงเมื่อเลือก "เปลี่ยน") -->
+    <div id="iss-replace-row" style="display:none;background:rgba(245,158,11,.07);border:1px solid rgba(245,158,11,.25);border-radius:8px;padding:10px 12px;margin-top:4px;">
+      <div style="font-size:11px;font-weight:600;color:var(--yellow);margin-bottom:6px;">🔄 ข้อมูล Tool เก่าที่นำมาเปลี่ยน</div>
+      <div id="iss-replace-items" style="display:flex;flex-direction:column;gap:6px;"></div>
+    </div>
+    <div id="iss-qtyRow" style="display:none;" class="fg"><label class="fl">จำนวน (กรณีไม่มี Serial)</label><input class="fi" type="number" id="iss-qty" value="1" min="1"></div>
+    <div class="mf">
+      <button class="btn btn-outline" onclick="closeModal('issue')">ยกเลิก</button>
+      <button class="btn btn-yellow" onclick="submitIssue()">📤 ยืนยันเบิก</button>
+    </div>
+  </div>
+</div>
+
+<!-- ===== MODAL: RETURN ===== -->
+<div class="mo" id="mo-return">
+  <div class="modal">
+    <div class="mt">↩ บันทึกคืน Tool</div>
+    <!-- MODE TOGGLE -->
+    <div style="display:flex;gap:8px;margin-bottom:14px;">
+      <button id="ret-modeA" onclick="setRetMode('issue')"
+        style="flex:1;padding:9px 10px;border-radius:7px;border:2px solid var(--orange);background:rgba(249,115,22,.15);color:var(--orange);font-family:inherit;font-size:12px;font-weight:600;cursor:pointer;text-align:left;">
+        🔗 เลือกจากรายการเบิก
+        <div style="font-size:10px;color:var(--muted);font-weight:400;margin-top:1px;">Link กับ Transaction + Serial</div>
+      </button>
+      <button id="ret-modeB" onclick="setRetMode('manual')"
+        style="flex:1;padding:9px 10px;border-radius:7px;border:2px solid var(--border);background:transparent;color:var(--muted);font-family:inherit;font-size:12px;font-weight:600;cursor:pointer;text-align:left;">
+        ✏️ กรอกเอง (Manual)
+        <div style="font-size:10px;font-weight:400;margin-top:1px;">ไม่ต้อง Link Transaction</div>
+      </button>
+    </div>
+
+    <!-- MODE A: from issue -->
+    <div id="ret-modeIssue">
+      <!-- Step 1: pick txn -->
+      <div id="ret-step1">
+        <div style="font-size:11px;color:var(--muted);margin-bottom:6px;">① เลือกรายการที่เบิกออกไป (In Use)</div>
+        <input class="si" type="text" id="ret-issueFilter" placeholder="🔍 กรอง..." oninput="renderReturnIssueList()" style="width:100%;margin-bottom:8px;">
+        <div id="retIssueList" style="max-height:210px;overflow-y:auto;border:1px solid var(--border);border-radius:8px;"></div>
+      </div>
+      <!-- Step 2: pick serial -->
+      <div id="ret-step2" style="display:none;margin-top:12px;">
+        <div style="font-size:11px;color:var(--muted);margin-bottom:6px;">② เลือก Serial ที่คืน (คืนได้หลายชิ้น)</div>
+        <div style="font-size:12px;font-weight:600;margin-bottom:8px;padding:8px 10px;background:rgba(249,115,22,.08);border:1px solid rgba(249,115,22,.2);border-radius:7px;" id="ret-txnInfo"></div>
+        <div id="ret-serialPicker" style="max-height:180px;overflow-y:auto;border:1px solid var(--border);border-radius:8px;margin-bottom:8px;"></div>
+        <div id="ret-noSerialQtyRow" style="display:none;">
+          <div class="fr">
+            <div class="fg"><label class="fl">จำนวนที่คืน <span id="ret-maxQtyHint" style="color:var(--orange);"></span></label><input class="fi" type="number" id="ret-noSerialQty" value="1" min="1"></div>
+            <div class="fg"><label class="fl">Serial (กรอกเองได้)</label><input class="fi" type="text" id="ret-noSerialCode" placeholder="ถ้าไม่มีปล่อยว่าง"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- MODE B: manual -->
+    <div id="ret-modeManual" style="display:none;">
+      <div class="fr">
+        <div class="fg"><label class="fl">ประเภท Tool</label>
+          <select class="fi" id="ret-type" onchange="updateRetSerialList()">
+            <option>Insert</option><option>Endmill</option><option>Tap</option><option>Drill</option>
+            <option>Ball</option><option>Reamer</option><option>Chamfer</option><option>Spot Drill</option>
+            <option>THREAD MILL</option><option>screw</option><option>center drill</option>
+          </select>
+        </div>
+        <div class="fg"><label class="fl">ชื่อ Tool</label><input class="fi" type="text" id="ret-name" placeholder="ชื่อ Tool"></div>
+      </div>
+      <div class="fr">
+        <div class="fg"><label class="fl">Serial (ถ้ามี)</label>
+          <input class="fi" list="ret-serial-list" type="text" id="ret-serial" placeholder="Serial หรือ N/A" oninput="updateRetSerialList()">
+          <datalist id="ret-serial-list"></datalist>
+        </div>
+        <div class="fg"><label class="fl">จำนวน</label><input class="fi" type="number" id="ret-qty" value="1" min="1"></div>
+      </div>
+      <div class="fg"><label class="fl">แผนก</label>
+        <input list="ret-dept-list" class="fi" id="ret-dept" placeholder="พิมพ์หรือเลือก">
+        <datalist id="ret-dept-list"></datalist>
+      </div>
+    </div>
+
+    <!-- Shared -->
+    <div style="border-top:1px solid var(--border);margin:12px 0;"></div>
+    <div class="fr">
+      <div class="fg"><label class="fl">วันที่คืน</label><input class="fi" type="date" id="ret-date"></div>
+      <div class="fg"><label class="fl">ผู้คืน</label>
+        <input list="ret-person-list" class="fi" type="text" id="ret-person" placeholder="พิมพ์หรือเลือก">
+        <datalist id="ret-person-list"></datalist>
+      </div>
+    </div>
+    <div class="fr">
+      <div class="fg">
+        <label class="fl">⭐ สถานะหลังคืน</label>
+        <select class="fi" id="ret-status">
+          <option value="used_inspect" selected>🔍 รอ Inspect (ค่าเริ่มต้น)</option>
+          <option value="used_ok">✓ ใช้ได้อีก — ผ่านแล้ว</option>
+          <option value="scrapped">❌ Scrap — ทิ้ง</option>
+        </select>
+        <div style="font-size:10px;color:var(--muted);margin-top:3px;">💡 ค่าเริ่มต้นเป็น "รอ Inspect" — สามารถเปลี่ยนได้ที่หน้า Registry</div>
+      </div>
+      <div class="fg"><label class="fl">หมายเหตุ</label><input class="fi" type="text" id="ret-note" placeholder="สึก, คมหัก..."></div>
+    </div>
+    <div class="mf">
+      <button class="btn btn-outline" onclick="closeModal('return')">ยกเลิก</button>
+      <button class="btn btn-orange" onclick="submitReturn()">↩ บันทึกคืน</button>
+    </div>
+  </div>
+</div>
+
+<!-- ===== MODAL: RE-ISSUE ===== -->
+<div class="mo" id="mo-reissue">
+  <div class="modal">
+    <div class="mt">♻ เบิก Used Tool</div>
+    <p style="font-size:11px;color:var(--muted);margin-bottom:10px;">เลือก Tool ที่ผ่าน Inspect แล้ว (สถานะ "✓ Used OK")</p>
+    <div id="riStockList" style="max-height:210px;overflow-y:auto;border:1px solid var(--border);border-radius:8px;margin-bottom:12px;"></div>
+    <div class="fr">
+      <div class="fg"><label class="fl">วันที่เบิก</label><input class="fi" type="date" id="ri-date"></div>
+      <div class="fg"><label class="fl">แผนก</label>
+        <input list="ri-dept-list" class="fi" id="ri-dept" placeholder="พิมพ์หรือเลือก">
+        <datalist id="ri-dept-list"></datalist>
+      </div></div>
+    <div class="fg"><label class="fl">ผู้เบิก</label>
+      <input list="ri-person-list" class="fi" type="text" id="ri-person" placeholder="พิมพ์หรือเลือก">
+      <datalist id="ri-person-list"></datalist>
+    </div>
+    <div class="mf">
+      <button class="btn btn-outline" onclick="closeModal('reissue')">ยกเลิก</button>
+      <button class="btn btn-green" onclick="submitReissue()">♻ ยืนยันเบิก</button>
+    </div>
+  </div>
+</div>
+
+<!-- ===== MODAL: INSPECT ===== -->
+<div class="mo" id="mo-inspect">
+  <div class="modal">
+    <div class="mt">🔍 ผล Inspect Tool</div>
+    <p style="font-size:12px;color:var(--muted);margin-bottom:12px;" id="insp-info"></p>
+    <div class="fg"><label class="fl">ผลการตรวจสอบ</label>
+      <select class="fi" id="insp-result">
+        <option value="used_ok">✓ ผ่าน — ใช้ได้อีก (Used OK)</option>
+        <option value="scrapped">❌ ไม่ผ่าน — ทิ้ง (Scrap)</option>
+      </select>
+    </div>
+    <div class="fg"><label class="fl">หมายเหตุ</label><input class="fi" type="text" id="insp-note" placeholder="ผลการตรวจ..."></div>
+    <div class="mf">
+      <button class="btn btn-outline" onclick="closeModal('inspect')">ยกเลิก</button>
+      <button class="btn btn-primary" onclick="submitInspect()">✓ บันทึกผล</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ═══════════════════════════════════════════
+//  CORE DATA MODEL
+// ═══════════════════════════════════════════
+// Tool Registry: one entry per serial (or one entry per qty-batch if no serial)
+// Status: stock | inuse | used_inspect | used_ok | scrapped
+let REGISTRY = [];
+let TXNS = [];
+// event types: buy | issue | return | reissue | inspect
+
+
+const TYPE_COLORS={"Insert":"#00d4ff","Endmill":"#7c3aed","Tap":"#22c55e","Drill":"#f59e0b","Ball":"#f43f5e","Reamer":"#06b6d4","Chamfer":"#84cc16","screw":"#6366f1","Spot Drill":"#ec4899","THREAD MILL":"#14b8a6","center drill":"#a855f7","ลวด wire cut":"#fb923c","Back Chamfer":"#0ea5e9","U-DRILL":"#9ca3af"};
+const tc=t=>TYPE_COLORS[t]||'#64748b';
+const tagCls=t=>({Insert:'tb',Endmill:'tp',Tap:'tg',Drill:'ty',Ball:'tr',Reamer:'tb',screw:'tm'}[t]||'tm');
+const uid=()=>Math.random().toString(36).slice(2,8).toUpperCase();
+const today=()=>new Date().toISOString().split('T')[0];
+const statusPill=s=>({
+  stock:'<span class="sp sp-stock">📦 Stock</span>',
+  inuse:'<span class="sp sp-inuse">🔧 In Use</span>',
+  used_inspect:'<span class="sp sp-inspect">🔍 Inspect</span>',
+  used_ok:'<span class="sp sp-ok">✓ Used OK</span>',
+  scrapped:'<span class="sp sp-scrap">❌ Scrapped</span>'
+}[s]||`<span class="sp">${s}</span>`);
+const eventLabel=e=>({buy:'🛒 ซื้อเข้า',issue:'📤 เบิก',return:'↩ คืน',reissue:'♻ เบิก Used',inspect:'🔍 Inspect'}[e]||e);
+const eventColor=e=>({buy:'var(--accent)',issue:'var(--yellow)',return:'var(--orange)',reissue:'var(--green)',inspect:'#a78bfa'}[e]||'var(--muted)');
+
+
+// ═══════════════════════════════════════════
+//  NAV
+// ═══════════════════════════════════════════
+function nav(el,page,title,sub){
+  document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  if(el) el.classList.add('active');
+  document.getElementById('page-'+page).classList.add('active');
+  document.getElementById('topTitle').textContent=title;
+  document.getElementById('topSub').textContent=sub;
+  refreshPage(page);
+}
+function mnavActive(btn){
+  document.querySelectorAll('.mnav-btn').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+}
+function refreshPage(p){
+  if(p==='dashboard') renderDashboard();
+  if(p==='registry') renderRegistry();
+  if(p==='buy') renderBuy();
+  if(p==='issue') renderIssue();
+  if(p==='return') renderReturn();
+  if(p==='reissue') renderReissue();
+}
+// ═══════════════════════════════════════════
+//  DASHBOARD
+// ═══════════════════════════════════════════
+function renderDashboard(){
+  const r=REGISTRY;
+  const stock=r.filter(x=>x.status==='stock').length;
+  const inuse=r.filter(x=>x.status==='inuse').length;
+  const inspect=r.filter(x=>x.status==='used_inspect').length;
+  const ok=r.filter(x=>x.status==='used_ok').length;
+  const scrap=r.filter(x=>x.status==='scrapped').length;
+  const noSer=r.filter(x=>!x.hasSerial).length;
+  document.getElementById('dTotalSerial').textContent=r.length;
+  document.getElementById('dNoSerial').textContent=`ไม่มี Serial ${noSer} ชิ้น`;
+  document.getElementById('dStock').textContent=stock;
+  document.getElementById('dInUse').textContent=inuse;
+  document.getElementById('dUsed').textContent=inspect+ok;
+  document.getElementById('dInspect').textContent=`รอตรวจ ${inspect} / ใช้ซ้ำได้ ${ok}`;
+  document.getElementById('dScrap').textContent=scrap;
+  updateBadges();
+  drawStatusChart(stock,inuse,inspect,ok,scrap);
+  drawTypeChart();
+  renderCostSummary();
+  renderDeptChart();
+  renderRecent();
+}
+let cStatusInst=null,cTypeInst=null;
+function drawStatusChart(stock,inuse,inspect,ok,scrap){
+  const ctx=document.getElementById('cStatus');
+  if(cStatusInst){cStatusInst.destroy();}
+  cStatusInst=new Chart(ctx,{type:'doughnut',
+    data:{labels:['Stock','In Use','Inspect','Used OK','Scrapped'],
+      datasets:[{data:[stock,inuse,inspect,ok,scrap],
+        backgroundColor:['#00d4ff','#f59e0b','#a78bfa','#22c55e','#ef4444'],
+        borderWidth:0,hoverOffset:4}]},
+    options:{responsive:true,maintainAspectRatio:false,
+      plugins:{legend:{position:'bottom',labels:{color:'#64748b',font:{size:10},boxWidth:10,padding:8}}}}});
+}
+function drawTypeChart(){
+  const ctx=document.getElementById('cType');
+  if(cTypeInst){cTypeInst.destroy();}
+  const byType={};
+  REGISTRY.forEach(r=>{byType[r.type]=(byType[r.type]||0)+1;});
+  const sorted=Object.entries(byType).sort((a,b)=>b[1]-a[1]).slice(0,6);
+  cTypeInst=new Chart(ctx,{type:'bar',
+    data:{labels:sorted.map(x=>x[0]),
+      datasets:[{data:sorted.map(x=>x[1]),backgroundColor:sorted.map(x=>tc(x[0])),borderRadius:4,borderSkipped:false}]},
+    options:{responsive:true,maintainAspectRatio:false,
+      plugins:{legend:{display:false}},
+      scales:{x:{ticks:{color:'#64748b',font:{size:9}},grid:{color:'#1a1e2a'}},
+              y:{ticks:{color:'#64748b',font:{size:9}},grid:{color:'#1a1e2a'}}}}});
+  const leg=document.getElementById('typeLeg');
+  leg.innerHTML=sorted.map(([t,n])=>`<div style="display:flex;align-items:center;gap:6px;font-size:10px;">
+    <div style="width:7px;height:7px;border-radius:50%;background:${tc(t)};flex-shrink:0;"></div>
+    <span style="flex:1;color:var(--muted);">${t}</span>
+    <span style="font-family:'JetBrains Mono',monospace;font-size:11px;">${n}</span>
+  </div>`).join('');
+}
+// ═══════════════════════════════════════════
+//  COST SUMMARY (มูลค่า Tool รายเดือน)
+// ═══════════════════════════════════════════
+let cCostInst = null;
+
+function initCostYearFilter(){
+  const sel = document.getElementById('costYear');
+  if(!sel) return;
+  const years = [...new Set(
+    TXNS.filter(t=>t.event==='issue'&&t.date).map(t=>t.date.slice(0,4))
+  )].filter(Boolean).sort().reverse();
+  if(!years.length) years.push(new Date().getFullYear().toString());
+  const cur = sel.value;
+  sel.innerHTML = years.map(y=>`<option value="${y}" ${y===cur?'selected':''}>${y}</option>`).join('');
+  if(!sel.value) sel.value = years[0];
+}
+
+function renderCostSummary(){
+  initCostYearFilter();
+  const year = document.getElementById('costYear')?.value || new Date().getFullYear().toString();
+  const view = document.getElementById('costView')?.value || 'both';
+
+  // กรองเฉพาะ issue ของปีที่เลือก
+  const issues = TXNS.filter(t => t.event==='issue' && t.date?.startsWith(year));
+
+  // รวมข้อมูลรายเดือน
+  const months = Array.from({length:12},(_,i)=>String(i+1).padStart(2,'0'));
+  const monthData = months.map(m => {
+    const txns = issues.filter(t=>t.date.slice(5,7)===m);
+    const qty = txns.reduce((s,t)=>s+(t.qty||1),0);
+    const cost = txns.reduce((s,t)=>{
+      const reg = REGISTRY.find(r=>r.id===t.toolId);
+      const price = reg?.price || t.price || 0;
+      return s + price*(t.qty||1);
+    },0);
+    return { month:`${year}-${m}`, label:`${parseInt(m)}`, qty, cost };
+  });
+
+  // KPI
+  const totalQty  = monthData.reduce((s,d)=>s+d.qty,0);
+  const totalCost = monthData.reduce((s,d)=>s+d.cost,0);
+  const maxQtyMonth  = monthData.reduce((a,b)=>b.qty>a.qty?b:a, monthData[0]);
+  const maxCostMonth = monthData.reduce((a,b)=>b.cost>a.cost?b:a, monthData[0]);
+  document.getElementById('costKpiRow').innerHTML = `
+    <div style="background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:12px;">
+      <div style="font-size:10px;color:var(--muted);margin-bottom:4px;">รวมที่เบิกปี ${year}</div>
+      <div style="font-size:22px;font-weight:700;color:var(--accent);">${totalQty.toLocaleString('th')}</div>
+      <div style="font-size:10px;color:var(--muted);">ชิ้น</div>
+    </div>
+    <div style="background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:12px;">
+      <div style="font-size:10px;color:var(--muted);margin-bottom:4px;">มูลค่ารวมปี ${year}</div>
+      <div style="font-size:20px;font-weight:700;color:var(--yellow);">฿${totalCost.toLocaleString('th',{maximumFractionDigits:0})}</div>
+      <div style="font-size:10px;color:var(--muted);">บาท</div>
+    </div>
+    <div style="background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:12px;">
+      <div style="font-size:10px;color:var(--muted);margin-bottom:4px;">เดือนที่เบิกมากสุด</div>
+      <div style="font-size:20px;font-weight:700;color:var(--green);">${maxQtyMonth.qty>0?maxQtyMonth.label+' ('+maxQtyMonth.qty+' ชิ้น)':'—'}</div>
+      <div style="font-size:10px;color:var(--muted);">เดือน</div>
+    </div>
+    <div style="background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:12px;">
+      <div style="font-size:10px;color:var(--muted);margin-bottom:4px;">เดือนมูลค่าสูงสุด</div>
+      <div style="font-size:18px;font-weight:700;color:var(--orange);">${maxCostMonth.cost>0?maxCostMonth.label+' (฿'+maxCostMonth.cost.toLocaleString('th',{maximumFractionDigits:0})+')':'—'}</div>
+      <div style="font-size:10px;color:var(--muted);">เดือน</div>
+    </div>`;
+
+  // Chart
+  const ctx = document.getElementById('cCost');
+  if(cCostInst){ cCostInst.destroy(); cCostInst=null; }
+  const labels = monthData.map(d=>d.label);
+  const datasets = [];
+  if(view==='qty'||view==='both'){
+    datasets.push({ label:'จำนวน (ชิ้น)', data:monthData.map(d=>d.qty), backgroundColor:'#00d4ff88', borderColor:'#00d4ff', borderWidth:2, borderRadius:4, yAxisID:'y' });
+  }
+  if(view==='cost'||view==='both'){
+    datasets.push({ label:'มูลค่า (฿)', data:monthData.map(d=>d.cost), backgroundColor:'#f59e0b44', borderColor:'#f59e0b', borderWidth:2, borderRadius:4, type:'line', yAxisID:'y2', fill:true, tension:0.4, pointRadius:4 });
+  }
+  if(ctx){
+    const scales = {
+      x:{ ticks:{color:'#64748b',font:{size:10}}, grid:{color:'#1a1e2a'} }
+    };
+    if(view==='qty'||view==='both') scales.y={ position:'left', ticks:{color:'#00d4ff',font:{size:10}}, grid:{color:'#1a1e2a'}, beginAtZero:true };
+    if(view==='cost'||view==='both') scales.y2={ position:'right', ticks:{color:'#f59e0b',font:{size:10},callback:v=>'฿'+v.toLocaleString('th',{maximumFractionDigits:0})}, grid:{display:false}, beginAtZero:true };
+    if(view==='cost') { scales.y2.position='left'; delete scales.y; }
+    cCostInst = new Chart(ctx,{
+      type:'bar',
+      data:{ labels, datasets },
+      options:{ responsive:true, maintainAspectRatio:false, interaction:{mode:'index',intersect:false},
+        plugins:{ legend:{labels:{color:'#64748b',font:{size:11}}},
+          tooltip:{callbacks:{label:c=>c.dataset.label+': '+(c.dataset.yAxisID==='y2'?'฿'+c.parsed.y.toLocaleString('th',{maximumFractionDigits:0}):c.parsed.y+' ชิ้น')}} },
+        scales }
+    });
+  }
+
+  // Legend summary
+  document.getElementById('costLegend').innerHTML = monthData.filter(d=>d.qty>0).slice(0,6).map(d=>`
+    <div style="display:flex;align-items:center;justify-content:space-between;font-size:11px;gap:12px;">
+      <span style="color:var(--muted);">เดือน ${parseInt(d.label)}</span>
+      <span style="font-family:'JetBrains Mono',monospace;color:var(--accent);">${d.qty} ชิ้น</span>
+      <span style="font-family:'JetBrains Mono',monospace;color:var(--yellow);">฿${d.cost.toLocaleString('th',{maximumFractionDigits:0})}</span>
+    </div>`).join('');
+
+  // Monthly detail table
+  const hasData = monthData.some(d=>d.qty>0);
+  document.getElementById('costTable').innerHTML = !hasData ? '' : `
+    <table style="width:100%;font-size:11px;border-collapse:collapse;">
+      <thead><tr style="color:var(--muted);border-bottom:1px solid var(--border);">
+        <th style="padding:6px 10px;text-align:left;">เดือน</th>
+        <th style="padding:6px 10px;text-align:right;">จำนวนที่เบิก</th>
+        <th style="padding:6px 10px;text-align:right;">มูลค่ารวม</th>
+        <th style="padding:6px 10px;text-align:right;">ราคาเฉลี่ย/ชิ้น</th>
+        <th style="padding:6px 10px;text-align:left;">สัดส่วน</th>
+      </tr></thead>
+      <tbody>${monthData.map(d=>{
+        const pct = totalCost>0 ? Math.round(d.cost/totalCost*100) : 0;
+        const avg = d.qty>0 ? Math.round(d.cost/d.qty) : 0;
+        if(d.qty===0) return '';
+        return `<tr style="border-bottom:1px solid var(--border);">
+          <td style="padding:7px 10px;font-weight:600;">เดือน ${parseInt(d.label)}</td>
+          <td style="padding:7px 10px;text-align:right;font-family:'JetBrains Mono',monospace;color:var(--accent);">${d.qty.toLocaleString('th')}</td>
+          <td style="padding:7px 10px;text-align:right;font-family:'JetBrains Mono',monospace;color:var(--yellow);">฿${d.cost.toLocaleString('th',{maximumFractionDigits:0})}</td>
+          <td style="padding:7px 10px;text-align:right;color:var(--muted);">฿${avg.toLocaleString('th')}</td>
+          <td style="padding:7px 10px;min-width:120px;">
+            <div style="display:flex;align-items:center;gap:6px;">
+              <div style="flex:1;height:6px;background:var(--surface2);border-radius:3px;">
+                <div style="width:${pct}%;height:100%;background:var(--yellow);border-radius:3px;"></div>
+              </div>
+              <span style="font-size:10px;color:var(--muted);min-width:28px;">${pct}%</span>
+            </div>
+          </td>
+        </tr>`;
+      }).join('')}</tbody>
+    </table>`;
+}
+
+let cDeptInst = null;
+function initDeptFilters(){
+  const issues = TXNS.filter(t=>t.event==='issue');
+
+  // Tool datalist
+  const toolDL = document.getElementById('deptChartToolList');
+  if(toolDL){
+    const tools = [...new Set(issues.map(t=>t.name||''))].filter(Boolean).sort();
+    toolDL.innerHTML = tools.map(n=>`<option value="${n}">`).join('');
+  }
+
+  // Month dropdown
+  const monthSel = document.getElementById('deptChartMonth');
+  if(monthSel){
+    const curMonth = monthSel.value;
+    const months = [...new Set(issues.map(t=>t.date?t.date.slice(0,7):''))].filter(Boolean).sort().reverse();
+    monthSel.innerHTML = `<option value="">— ทุกเดือน —</option>` +
+      months.map(m=>`<option value="${m}" ${m===curMonth?'selected':''}>${m}</option>`).join('');
+  }
+}
+
+function renderDeptChart(){
+  initDeptFilters();
+  const selTool  = document.getElementById('deptChartTool')?.value  || '';
+  const selMonth = document.getElementById('deptChartMonth')?.value || '';
+  const mode     = document.getElementById('deptChartMode')?.value  || 'dept';
+  const colors   = ['#00d4ff','#f59e0b','#a78bfa','#22c55e','#ef4444','#fb923c','#38bdf8','#f472b6','#84cc16','#e879f9'];
+
+  // กรองเฉพาะ issue
+  let issues = TXNS.filter(t => t.event==='issue');
+  if(selTool)  issues = issues.filter(t=>(t.name||'').toLowerCase().includes(selTool.toLowerCase()));
+  if(selMonth) issues = issues.filter(t=>t.date?.startsWith(selMonth));
+
+  // กลุ่มตาม mode
+  const groups = {};
+  issues.forEach(t=>{
+    const key = mode==='dept' ? (t.dept||'ไม่ระบุ') : (t.date?t.date.slice(0,7):'ไม่ระบุ');
+    if(!groups[key]) groups[key]={ count:0, tools:{}, persons:[] };
+    const qty = t.qty||1;
+    groups[key].count += qty;
+    const tname = t.name||'ไม่ระบุ';
+    groups[key].tools[tname] = (groups[key].tools[tname]||0) + qty;
+    if(t.person && !groups[key].persons.includes(t.person)) groups[key].persons.push(t.person);
+  });
+
+  const sorted = Object.entries(groups).sort((a,b)=> mode==='month' ? a[0].localeCompare(b[0]) : b[1].count-a[1].count);
+  const labels = sorted.map(x=>x[0]);
+  const counts = sorted.map(x=>x[1].count);
+
+  // Chart
+  const ctx = document.getElementById('cDept');
+  if(cDeptInst){ cDeptInst.destroy(); cDeptInst=null; }
+  if(!ctx || sorted.length===0){
+    document.getElementById('deptLegend').innerHTML='<div style="color:var(--muted);font-size:12px;">ไม่มีข้อมูลการเบิก</div>';
+    document.getElementById('deptTable').innerHTML='';
+    return;
+  }
+  cDeptInst = new Chart(ctx, {
+    type: 'bar',
+    data:{
+      labels,
+      datasets:[{
+        data: counts,
+        backgroundColor: labels.map((_,i)=>colors[i%colors.length]),
+        borderRadius:6, borderSkipped:false
+      }]
+    },
+    options:{
+      responsive:true, maintainAspectRatio:false,
+      plugins:{ legend:{display:false},
+        tooltip:{callbacks:{label:c=>`${c.parsed.y} ชิ้น`}} },
+      scales:{
+        x:{ticks:{color:'#64748b',font:{size:10}},grid:{color:'#1a1e2a'}},
+        y:{ticks:{color:'#64748b',font:{size:10},stepSize:1},grid:{color:'#1a1e2a'},beginAtZero:true}
+      }
+    }
+  });
+
+  // Legend
+  document.getElementById('deptLegend').innerHTML = sorted.map(([k,v],i)=>`
+    <div style="display:flex;align-items:center;gap:6px;font-size:11px;">
+      <div style="width:10px;height:10px;border-radius:3px;background:${colors[i%colors.length]};flex-shrink:0;"></div>
+      <span style="flex:1;color:var(--fg);font-weight:600;">${k}</span>
+      <span style="font-family:'JetBrains Mono',monospace;color:var(--accent);">${v.count} ชิ้น</span>
+    </div>`).join('');
+
+  // Table รายละเอียด
+  const colLabel = mode==='dept' ? 'แผนก' : 'เดือน';
+  document.getElementById('deptTable').innerHTML = `
+    <table style="width:100%;font-size:11px;border-collapse:collapse;">
+      <thead><tr style="color:var(--muted);border-bottom:1px solid var(--border);">
+        <th style="padding:6px 10px;text-align:left;">${colLabel}</th>
+        <th style="padding:6px 10px;text-align:left;">Tool ที่เบิก</th>
+        <th style="padding:6px 10px;text-align:left;">ผู้เบิก</th>
+        <th style="padding:6px 10px;text-align:right;">จำนวน</th>
+      </tr></thead>
+      <tbody>${sorted.map(([k,v],i)=>{
+        const topTools = Object.entries(v.tools).sort((a,b)=>b[1]-a[1]).slice(0,3)
+          .map(([n,c])=>`${n.slice(0,22)} <span style="color:var(--accent);">×${c}</span>`).join(', ');
+        const persons = v.persons.slice(0,3).join(', ');
+        return `<tr style="border-bottom:1px solid var(--border);">
+          <td style="padding:7px 10px;">
+            <div style="display:flex;align-items:center;gap:6px;">
+              <div style="width:8px;height:8px;border-radius:2px;background:${colors[i%colors.length]};flex-shrink:0;"></div>
+              <span style="font-weight:600;">${k}</span>
+            </div>
+          </td>
+          <td style="padding:7px 10px;color:var(--muted);">${topTools||'-'}</td>
+          <td style="padding:7px 10px;color:var(--muted);">${persons||'-'}</td>
+          <td style="padding:7px 10px;text-align:right;font-family:'JetBrains Mono',monospace;color:var(--accent);font-weight:700;">${v.count}</td>
+        </tr>`;
+      }).join('')}</tbody>
+    </table>`;
+}
+
+function renderRecent(){
+  const recent=[...TXNS].sort((a,b)=>b.date.localeCompare(a.date)).slice(0,10);
+  document.getElementById('recentCount').textContent=TXNS.length+' รายการ';
+  document.getElementById('recentBody').innerHTML=recent.map(t=>`<tr>
+    <td class="mono">${t.date}</td>
+    <td><span style="font-size:11px;font-weight:600;color:${eventColor(t.event)};">${eventLabel(t.event)}</span></td>
+    <td style="max-width:180px;"><span class="tag ${tagCls(t.type)}" style="font-size:9px;">${t.type}</span> ${t.name}</td>
+    <td class="mono" style="color:var(--accent);">${t.serial&&t.serial!=='N/A'?t.serial:'<span style="color:var(--muted)">N/A</span>'}</td>
+    <td>${t.supplier||t.dept||'-'}</td>
+    <td>${t.person||'-'}</td>
+  </tr>`).join('');
+}
+function updateBadges(){
+  const stock=REGISTRY.filter(x=>x.status==='stock').length;
+  const issues=TXNS.filter(t=>t.event==='issue').length;
+  const rets=TXNS.filter(t=>t.event==='return').length;
+  const reis=TXNS.filter(t=>t.event==='reissue').length;
+  document.getElementById('bdgReg').textContent=REGISTRY.length;
+  document.getElementById('bdgBuy').textContent=TXNS.filter(t=>t.event==='buy').length;
+  document.getElementById('bdgIssue').textContent=issues;
+  document.getElementById('bdgReturn').textContent=rets;
+  document.getElementById('bdgReissue').textContent=reis;
+  // Mobile badges
+  const mbReg=document.getElementById('mbdgReg');
+  const mbIss=document.getElementById('mbdgIssue');
+  if(mbReg){mbReg.textContent=stock;mbReg.style.display=stock>0?'flex':'none';}
+  if(mbIss){mbIss.textContent=REGISTRY.filter(x=>x.status==='used_inspect').length;
+    mbIss.style.display=REGISTRY.filter(x=>x.status==='used_inspect').length>0?'flex':'none';}
+}
+
+// ═══════════════════════════════════════════
+//  REGISTRY
+// ═══════════════════════════════════════════
+let regCurrentView = 'group';
+
+function setRegView(view){
+  regCurrentView = view;
+  const isSerial = view === 'serial';
+  document.getElementById('regSerialView').style.display = isSerial ? '' : 'none';
+  document.getElementById('regGroupView').style.display  = isSerial ? 'none' : '';
+  document.getElementById('regViewGroup').style.background = !isSerial ? 'var(--accent)' : 'transparent';
+  document.getElementById('regViewGroup').style.color      = !isSerial ? '#000' : 'var(--muted)';
+  document.getElementById('regViewSerial').style.background = isSerial ? 'var(--accent)' : 'transparent';
+  document.getElementById('regViewSerial').style.color     = isSerial ? '#000' : 'var(--muted)';
+  document.getElementById('regCardTitle').textContent = isSerial ? '🗂 Tool Registry — รายชิ้น (Serial)' : '📋 Tool Registry — Summary (Group by Model)';
+  renderRegistry();
+}
+
+function renderRegistry(){
+  const q=(document.getElementById('regSearch')?.value||'').toLowerCase();
+  const tf=document.getElementById('regTypeF')?.value||'';
+  const sf=document.getElementById('regStatusF')?.value||'';
+  const serf=document.getElementById('regSerialF')?.value||'';
+  // populate type filter
+  const types=[...new Set(REGISTRY.map(r=>r.type))].sort();
+  const tf_el=document.getElementById('regTypeF');
+  if(tf_el&&tf_el.options.length<=1) types.forEach(t=>{const o=document.createElement('option');o.value=t;o.textContent=t;tf_el.appendChild(o);});
+
+  const filtered=REGISTRY.filter(r=>{
+    if(tf&&r.type!==tf) return false;
+    if(sf&&r.status!==sf) return false;
+    if(serf==='yes'&&!r.hasSerial) return false;
+    if(serf==='no'&&r.hasSerial) return false;
+    if(q&&!r.name.toLowerCase().includes(q)&&!(r.serial||'').toLowerCase().includes(q)) return false;
+    return true;
+  }).sort((a,b)=>(b.buyDate||'').localeCompare(a.buyDate||'')||b.id.localeCompare(a.id));
+
+  // stats
+  document.getElementById('regTotal').textContent=REGISTRY.length;
+  document.getElementById('regStock').textContent=REGISTRY.filter(x=>x.status==='stock').length;
+  document.getElementById('regInUse').textContent=REGISTRY.filter(x=>x.status==='inuse').length;
+  document.getElementById('regUsed').textContent=REGISTRY.filter(x=>x.status==='used_ok').length;
+  document.getElementById('regInspect').textContent=REGISTRY.filter(x=>x.status==='used_inspect').length;
+  document.getElementById('regScrap').textContent=REGISTRY.filter(x=>x.status==='scrapped').length;
+  document.getElementById('regCount').textContent=filtered.length+' รายการ';
+
+  // ── GROUP / SUMMARY VIEW ──
+  if(regCurrentView === 'group'){
+    const groups={};
+    REGISTRY.filter(r=>{
+      if(tf&&r.type!==tf) return false;
+      if(q&&!r.name.toLowerCase().includes(q)) return false;
+      return true;
+    }).forEach(r=>{
+      const key=r.type+'||'+r.name;
+      if(!groups[key]) groups[key]={
+        type:r.type, name:r.name, brand:r.brand||'',
+        price:r.price||0, unit:r.unit||'PCS', stock:0
+      };
+      const g=groups[key];
+      if((r.price||0)>g.price) g.price=r.price; // ใช้ราคาสูงสุดในกลุ่ม
+      if(r.unit&&r.unit!=='PCS') g.unit=r.unit;
+      if(r.status==='stock') g.stock++;
+    });
+
+    let gRows=Object.values(groups);
+    if(sf==='stock')        gRows=gRows.filter(g=>g.stock>0);
+    if(sf==='inuse')        gRows=gRows.filter(g=>REGISTRY.some(r=>r.status==='inuse'&&r.type===g.type&&r.name===g.name));
+    if(sf==='used_inspect') gRows=gRows.filter(g=>REGISTRY.some(r=>r.status==='used_inspect'&&r.type===g.type&&r.name===g.name));
+    if(sf==='used_ok')      gRows=gRows.filter(g=>REGISTRY.some(r=>r.status==='used_ok'&&r.type===g.type&&r.name===g.name));
+    if(sf==='scrapped')     gRows=gRows.filter(g=>REGISTRY.some(r=>r.status==='scrapped'&&r.type===g.type&&r.name===g.name));
+    gRows.sort((a,b)=>a.type.localeCompare(b.type)||a.name.localeCompare(b.name));
+
+    const fmt=(n)=>n.toLocaleString('th-TH',{minimumFractionDigits:2,maximumFractionDigits:2});
+    const totalQty=gRows.reduce((s,g)=>s+g.stock,0);
+    const totalVal=gRows.reduce((s,g)=>s+(g.stock*g.price),0);
+
+    document.getElementById('regCount').textContent=gRows.length+' รายการ';
+    document.getElementById('regGroupBody').innerHTML=gRows.map((g,i)=>{
+      const val=g.stock*g.price;
+      const qc=g.stock===0?'var(--red)':g.stock<=2?'var(--yellow)':'var(--accent)';
+      const qb=g.stock===0?'rgba(239,68,68,.08)':g.stock<=2?'rgba(245,158,11,.08)':'transparent';
+      return `<tr>
+        <td class="mono" style="color:var(--muted);font-size:11px;">${i+1}</td>
+        <td><span class="tag ${tagCls(g.type)}">${g.type}</span></td>
+        <td>
+          <div style="font-weight:600;font-size:12px;">${g.name}</div>
+          ${g.brand?`<div style="color:var(--muted);font-size:10px;">${g.brand}</div>`:''}
+        </td>
+        <td style="text-align:right;">
+          ${g.price>0?`<span class="mono">฿${fmt(g.price)}</span>`:`<span style="color:var(--muted);">—</span>`}
+        </td>
+        <td style="text-align:center;color:var(--muted);font-size:11px;">${g.unit}</td>
+        <td style="text-align:center;background:${qb};border-radius:6px;padding:8px 12px;">
+          <div class="mono" style="font-size:18px;font-weight:700;color:${qc};">${g.stock}</div>
+          ${g.stock===0?'<div style="font-size:9px;color:var(--red);">หมด</div>':g.stock<=2?'<div style="font-size:9px;color:var(--yellow);">⚠ ต่ำ</div>':''}
+        </td>
+        <td style="text-align:right;">
+          ${g.price>0&&g.stock>0?`<span class="mono" style="color:var(--green);">฿${fmt(val)}</span>`:`<span style="color:var(--muted);">—</span>`}
+        </td>
+      </tr>`;
+    }).join('');
+
+    document.getElementById('regGroupFoot').innerHTML=`
+      <tr style="border-top:2px solid var(--border);background:var(--surface2);">
+        <td colspan="4" style="padding:10px 12px;font-size:11px;font-weight:600;color:var(--muted);">
+          รวม ${gRows.length} รายการ
+        </td>
+        <td style="text-align:center;padding:10px 12px;font-size:10px;color:var(--muted);">ชิ้น</td>
+        <td style="text-align:center;padding:10px 12px;">
+          <span class="mono" style="font-size:16px;font-weight:700;color:var(--accent);">${totalQty.toLocaleString('th-TH')}</span>
+        </td>
+        <td style="text-align:right;padding:10px 12px;">
+          <span class="mono" style="font-size:13px;font-weight:700;color:var(--green);">฿${fmt(totalVal)}</span>
+        </td>
+      </tr>`;
+    return;
+  }
+
+    document.getElementById('regBody').innerHTML=filtered.map((r,i)=>`<tr>
+    <td><input type="checkbox" class="cb-sel cb-reg" data-id="${r.id}" onchange="toggleSel('reg','${r.id}',this)" ${getSelSet('reg').has(r.id)?'checked':''}></td>
+    <td class="mono" style="color:var(--muted);">${i+1}</td>
+    <td style="max-width:200px;">${r.name}</td>
+    <td><span class="tag ${tagCls(r.type)}">${r.type}</span></td>
+    <td class="mono" style="color:${r.hasSerial?'var(--accent)':'var(--muted)'};">
+      ${r.hasSerial?r.serial:'<span style="opacity:.5">N/A</span>'}
+      ${!r.hasSerial?'<span class="sp sp-noserial" style="font-size:9px;margin-left:4px;">no serial</span>':''}
+    </td>
+    <td style="color:var(--muted);">${r.brand||'-'}</td>
+    <td>${statusPill(r.status)}</td>
+    <td style="font-size:11px;">${r.holder?`${r.holder} / ${r.dept||''}`:r.status==='stock'?'<span style="color:var(--muted);">คลัง</span>':'-'}</td>
+    <td class="mono" style="color:var(--muted);">${r.buyDate||'-'}</td>
+
+  </tr>`).join('');
+}
+
+// ═══════════════════════════════════════════
+//  BUY PAGE
+// ═══════════════════════════════════════════
+function renderBuy(){
+  const q=(document.getElementById('buySearch')?.value||'').toLowerCase();
+  const tf=document.getElementById('buyTypeF')?.value||'';
+  const buyTxns=TXNS.filter(t=>t.event==='buy');
+  const types=[...new Set(buyTxns.map(t=>t.type))].sort();
+  const tf_el=document.getElementById('buyTypeF');
+  if(tf_el&&tf_el.options.length<=1) types.forEach(t=>{const o=document.createElement('option');o.value=t;o.textContent=t;tf_el.appendChild(o);});
+  const filtered=buyTxns.filter(t=>(!tf||t.type===tf)&&(!q||t.name.toLowerCase().includes(q)||(t.serial||'').toLowerCase().includes(q)||(t.supplier||'').toLowerCase().includes(q))).sort((a,b)=>(b.date||'').localeCompare(a.date||'')||b.id.localeCompare(a.id));
+  document.getElementById('buyTotal').textContent=buyTxns.length;
+  document.getElementById('buyWithSerial').textContent=buyTxns.filter(t=>t.hasSerial).length;
+  document.getElementById('buyNoSerial').textContent=buyTxns.filter(t=>!t.hasSerial).length;
+  document.getElementById('buyCount').textContent=filtered.length+' รายการ';
+  document.getElementById('buyBody').innerHTML=filtered.map(t=>`<tr>
+    <td><input type="checkbox" class="cb-sel cb-buy" data-id="${t.id}" onchange="toggleSel('buy','${t.id}',this)" ${getSelSet('buy').has(t.id)?'checked':''}></td>
+    <td class="mono" style="color:var(--accent);font-size:10px;">${t.id}</td>
+    <td class="mono">${t.date}</td>
+    <td><span class="tag ${tagCls(t.type)}">${t.type}</span></td>
+    <td style="max-width:200px;">${t.name}</td>
+    <td class="mono" style="color:${t.hasSerial?'var(--accent)':'var(--muted)'};">${t.serial||'N/A'}</td>
+    <td class="mono">${t.qty}</td>
+    <td>${t.supplier||'-'}</td>
+    <td class="mono">${t.price>0?'฿'+t.price.toLocaleString('th'):'<span style="color:var(--muted)">-</span>'}</td>
+    <td><button class="ab" style="background:rgba(239,68,68,.12);color:var(--red);" onclick="deleteTxn('${t.id}')" title="ลบ">🗑</button></td>
+  </tr>`).join('');
+}
+
+// ═══════════════════════════════════════════
+//  ISSUE PAGE
+// ═══════════════════════════════════════════
+function renderIssue(){
+  const q=(document.getElementById('issueSearch')?.value||'').toLowerCase();
+  const df=document.getElementById('issueDeptFilter')?.value||'';
+  const issueTxns=TXNS.filter(t=>t.event==='issue');
+  const filtered=issueTxns.filter(t=>(!df||t.dept===df)&&(!q||t.name.toLowerCase().includes(q)||(t.serial||'').toLowerCase().includes(q))).sort((a,b)=>(b.date||'').localeCompare(a.date||'')||b.id.localeCompare(a.id));
+  document.getElementById('issueTotal').textContent=issueTxns.length;
+  document.getElementById('issueInUse').textContent=REGISTRY.filter(r=>r.status==='inuse').length;
+  document.getElementById('issueDeptR').textContent=issueTxns.filter(t=>t.dept==='Repeat').length;
+  document.getElementById('issueDeptM').textContent=issueTxns.filter(t=>t.dept==='MC&CL').length;
+  document.getElementById('issueCount').textContent=filtered.length+' รายการ';
+  document.getElementById('issueBody').innerHTML=filtered.map(t=>{
+    const reg=REGISTRY.find(r=>r.id===t.toolId);
+    return `<tr>
+    <td><input type="checkbox" class="cb-sel cb-issue" data-id="${t.id}" onchange="toggleSel('issue','${t.id}',this)" ${getSelSet('issue').has(t.id)?'checked':''}></td>
+    <td class="mono" style="color:var(--yellow);font-size:10px;">${t.id}</td>
+    <td class="mono">${t.date}</td>
+    <td><span class="tag ${tagCls(t.type)}">${t.type}</span></td>
+    <td style="max-width:160px;">${t.name}</td>
+    <td class="mono" style="color:${t.hasSerial?'var(--accent)':'var(--muted)'};">${t.serial||'N/A'}</td>
+    <td class="mono">${t.qty}</td>
+    <td><span class="tag ${t.dept==='Repeat'?'tg':'ty'}">${t.dept}</span></td>
+    <td>${t.person}</td>
+    <td><span class="tag ${t.action==='เปลี่ยน'?'tb':'ty'}">${t.action}</span></td>
+    <td><button class="ab" style="background:rgba(239,68,68,.12);color:var(--red);" onclick="deleteTxn('${t.id}')" title="ลบ">🗑</button></td>
+  </tr>`;}).join('');
+}
+
+// ═══════════════════════════════════════════
+//  RETURN PAGE
+// ═══════════════════════════════════════════
+function renderReturn(){
+  const q=(document.getElementById('retSearch')?.value||'').toLowerCase();
+  const sf=document.getElementById('retStatusF')?.value||'';
+  const retTxns=TXNS.filter(t=>t.event==='return');
+  const filtered=retTxns.filter(t=>(!sf||t.retStatus===sf)&&(!q||t.name.toLowerCase().includes(q)||(t.serial||'').toLowerCase().includes(q))).sort((a,b)=>(b.date||'').localeCompare(a.date||'')||b.id.localeCompare(a.id));
+  document.getElementById('retTotal').textContent=retTxns.length;
+  document.getElementById('retInspect').textContent=retTxns.filter(t=>t.retStatus==='used_inspect').length;
+  document.getElementById('retOK').textContent=retTxns.filter(t=>t.retStatus==='used_ok').length;
+  document.getElementById('retScrap').textContent=retTxns.filter(t=>t.retStatus==='scrapped').length;
+  document.getElementById('retCount').textContent=filtered.length+' รายการ';
+  document.getElementById('retBody').innerHTML=filtered.length===0
+    ?'<tr><td colspan="10" style="text-align:center;padding:28px;color:var(--muted);">ยังไม่มีรายการคืน — กด "↩ บันทึกคืน Tool" เพื่อเริ่ม</td></tr>'
+    :filtered.map(t=>`<tr>
+    <td><input type="checkbox" class="cb-sel cb-ret" data-id="${t.id}" onchange="toggleSel('ret','${t.id}',this)" ${getSelSet('ret').has(t.id)?'checked':''}></td>
+    <td class="mono" style="color:var(--orange);font-size:10px;">${t.id}</td>
+    <td class="mono">${t.date}</td>
+    <td><span class="tag ${tagCls(t.type)}">${t.type}</span></td>
+    <td style="max-width:160px;">${t.name}</td>
+    <td class="mono" style="color:${t.hasSerial?'var(--accent)':'var(--muted)'};">${t.serial||'N/A'}</td>
+    <td class="mono">${t.qty}</td>
+    <td>${t.dept?`<span class="tag ${t.dept==='Repeat'?'tg':'ty'}">${t.dept}</span>`:'-'}</td>
+    <td>${t.person}</td>
+    <td>${statusPill(t.retStatus||t.status||'used_inspect')}</td>
+    <td style="color:var(--muted);font-size:11px;">${t.note||'-'}</td>
+    <td style="display:flex;gap:4px;">
+      ${(t.retStatus||t.status)==='used_inspect'?`
+        <button class="ab ab-b" onclick="quickInspectFromReturn('${t.id}')" title="ตรวจสอบ">🔍 Inspect</button>
+      `:''}
+      <button class="ab" style="background:rgba(239,68,68,.12);color:var(--red);" onclick="deleteTxn('${t.id}')" title="ลบ">🗑</button>
+    </td>
+  </tr>`).join('');
+}
+
+// ═══════════════════════════════════════════
+//  REISSUE PAGE
+// ═══════════════════════════════════════════
+function renderReissue(){
+  const q=(document.getElementById('riSearch')?.value||'').toLowerCase();
+  const df=document.getElementById('riDeptF')?.value||'';
+  const riTxns=TXNS.filter(t=>t.event==='reissue');
+  const filtered=riTxns.filter(t=>(!df||t.dept===df)&&(!q||t.name.toLowerCase().includes(q)||(t.serial||'').toLowerCase().includes(q))).sort((a,b)=>(b.date||'').localeCompare(a.date||'')||b.id.localeCompare(a.id));
+  const avail=REGISTRY.filter(r=>r.status==='used_ok').length;
+  const saving=riTxns.reduce((s,t)=>s+(t.saving||0),0);
+  document.getElementById('riTotal').textContent=riTxns.length;
+  document.getElementById('riAvail').textContent=avail;
+  document.getElementById('riSaving').textContent='฿'+saving.toLocaleString('th');
+  document.getElementById('riCount').textContent=filtered.length+' รายการ';
+  document.getElementById('riBody').innerHTML=filtered.length===0
+    ?'<tr><td colspan="9" style="text-align:center;padding:28px;color:var(--muted);">ยังไม่มีรายการเบิก Used Tool</td></tr>'
+    :filtered.map(t=>`<tr>
+    <td><input type="checkbox" class="cb-sel cb-ri" data-id="${t.id}" onchange="toggleSel('ri','${t.id}',this)" ${getSelSet('ri').has(t.id)?'checked':''}></td>
+    <td class="mono" style="color:var(--green);font-size:10px;">${t.id}</td>
+    <td class="mono">${t.date}</td>
+    <td><span class="tag ${tagCls(t.type)}">${t.type}</span></td>
+    <td style="max-width:160px;">${t.name}</td>
+    <td class="mono" style="color:var(--accent);">${t.serial||'N/A'}</td>
+    <td class="mono">${t.qty}</td>
+    <td><span class="tag ${t.dept==='Repeat'?'tg':'ty'}">${t.dept}</span></td>
+    <td>${t.person}</td>
+    <td class="mono" style="color:var(--green);">${t.saving>0?'฿'+t.saving.toLocaleString('th'):'-'}</td>
+    <td><button class="ab" style="background:rgba(239,68,68,.12);color:var(--red);" onclick="deleteTxn('${t.id}')" title="ลบ">🗑</button></td>
+  </tr>`).join('');
+}
+
+// ═══════════════════════════════════════════
+//  MODALS
+// ═══════════════════════════════════════════
+let buySerials=[];
+let selectedRegId=null;
+let retCurrentMode='issue';
+let retSelectedTxnId=null;
+let retSelectedSerials=new Set();
+
+function populateDesktopComboboxes(){
+  const persons=[...new Set(TXNS.filter(t=>t.person).map(t=>t.person))].sort();
+  const depts=[...new Set(TXNS.filter(t=>t.dept).map(t=>t.dept))].sort();
+  const pOpts=persons.map(p=>`<option value="${p}">`).join('');
+  const dOpts=depts.map(d=>`<option value="${d}">`).join('');
+  ['iss-person-list','ret-person-list','ri-person-list'].forEach(id=>{ const e=document.getElementById(id);if(e)e.innerHTML=pOpts; });
+  ['iss-dept-list','ret-dept-list','ri-dept-list'].forEach(id=>{ const e=document.getElementById(id);if(e)e.innerHTML=dOpts; });
+}
+
+function openModal(name){
+  if(name==='buy'){
+    buySerials=[];
+    document.getElementById('b-date').value=today();
+    const inp=document.getElementById('b-serialInput'); if(inp) inp.value='';
+    document.getElementById('b-itemCode').value='';
+    document.getElementById('b-brandCode').value='';
+    document.getElementById('b-brand').oninput=()=>{ document.getElementById('b-brandCode').value=''; previewSerials(); };
+    document.getElementById('b-autoQty').value='1';
+    document.getElementById('b-name').oninput=()=>{ document.getElementById('b-itemCode').value=''; previewSerials(); };
+    document.getElementById('b-type').onchange=previewSerials;
+    renderBuySerials();
+    setBuySerialMode('auto');
+    setTimeout(previewSerials, 50);
+  }
+  if(name==='issue'){selectedRegId=null;issSelected.clear();document.getElementById('iss-date').value=today();renderIssueStockList();renderIssueBasket();const t=document.getElementById('iss-typeFilter');if(t&&t.options.length<=1){[...new Set(REGISTRY.filter(r=>r.status==='stock').map(r=>r.type))].sort().forEach(tp=>{const o=document.createElement('option');o.value=tp;o.textContent=tp;t.appendChild(o);});}document.getElementById('issueSelectedInfo').style.display='none';populateDesktopComboboxes();}
+  if(name==='return'){retCurrentMode='issue';retSelectedTxnId=null;retSelectedSerials=new Set();document.getElementById('ret-date').value=today();setRetMode('issue');populateDesktopComboboxes();}
+  if(name==='reissue'){selectedRegId=null;document.getElementById('ri-date').value=today();renderRiStockList();populateDesktopComboboxes();}
+  if(name==='settings') openSettingsModal();
+  document.getElementById('mo-'+name).classList.add('open');
+}
+function closeModal(name){document.getElementById('mo-'+name).classList.remove('open');}
+document.querySelectorAll('.mo').forEach(o=>o.addEventListener('click',function(e){if(e.target===this)this.classList.remove('open');}));
+
+// ── BUY SERIAL MODE ──
+let buySerialMode = 'auto'; // 'auto' | 'manual' | 'none'
+
+// Default prefix per tool type
+// TYPE_PREFIX — editable via ⚙ Settings
+let TYPE_PREFIX = {
+  'Insert':'INS','Endmill':'EM','Tap':'TAP','Drill':'DRL','Ball':'BALL',
+  'Reamer':'RMR','Chamfer':'CHM','Spot Drill':'SPT','THREAD MILL':'THM',
+  'U-DRILL':'UDR','screw':'SCR','center drill':'CDR','ลวด wire cut':'WCT',
+  'Back Chamfer':'BCH','Hand Reamer':'HRM','REAMER CARBIDE':'RMC'
+};
+
+// BRAND_ABBR — editable via ⚙ Settings
+let BRAND_ABBR = {
+  '7leader':'7L','KYOCERA':'KYO','H-Pro':'HPRO','Windin':'WD',
+  'SANDVIK':'SVK','OSG':'OSG','YG':'YG','MITSUBISHI':'MIT',
+  'ISCAR':'ISC','KENNAMETAL':'KNM','SECO':'SCO','KORLOY':'KLY'
+};
+
+function setSettingsTab(tab){
+  ['type','brand'].forEach(t=>{
+    const btn=document.getElementById('stab-'+t);
+    const con=document.getElementById('stab-'+t+'-content');
+    const isActive=t===tab;
+    btn.style.color=isActive?'var(--accent)':'var(--muted)';
+    btn.style.borderBottom=isActive?'2px solid var(--accent)':'2px solid transparent';
+    con.style.display=isActive?'':'none';
+  });
+}
+
+function openSettingsModal(){
+  setSettingsTab('type');
+  // ── TYPE PREFIX list ──
+  const allTypes=[...new Set([...Object.keys(TYPE_PREFIX),...REGISTRY.map(r=>r.type)])].sort();
+  const yy=new Date().getFullYear().toString().slice(2);
+  document.getElementById('settingsPrefixList').innerHTML=allTypes.map(t=>{
+    const prefix=TYPE_PREFIX[t]||'';
+    const count=REGISTRY.filter(r=>r.type===t&&r.hasSerial).length;
+    const next=getNextSerialCounter(prefix)+1;
+    return `<div style="display:flex;align-items:center;gap:8px;padding:7px 10px;background:var(--surface2);border:1px solid var(--border);border-radius:7px;">
+      <span class="tag ${tagCls(t)}" style="min-width:80px;text-align:center;font-size:10px;">${t}</span>
+      <input class="fi" type="text" id="pfx-${t.replace(/[^a-zA-Z0-9]/g,'_')}"
+        value="${prefix}" placeholder="เช่น EM"
+        style="width:80px;text-transform:uppercase;font-family:'JetBrains Mono',monospace;font-weight:600;"
+        oninput="this.value=this.value.toUpperCase()">
+      <span style="font-size:10px;color:var(--muted);flex:1;">
+        ถัดไป: <span class="mono" style="color:var(--accent);">${prefix?prefix+'-'+yy+'-'+String(next).padStart(2,'0'):'—'}</span>
+      </span>
+      <span style="font-size:10px;color:var(--muted);">${count} ชิ้น</span>
+    </div>`;
+  }).join('');
+  // ── BRAND ABBR list ──
+  renderBrandSettings();
+}
+
+function renderBrandSettings(){
+  const allBrands=[...new Set([...Object.keys(BRAND_ABBR),...REGISTRY.map(r=>r.brand).filter(Boolean)])].sort();
+  document.getElementById('settingsBrandList').innerHTML=allBrands.map(b=>{
+    const abbr=BRAND_ABBR[b]||brandCodeFromBrand(b);
+    const count=REGISTRY.filter(r=>r.brand===b).length;
+    const id='bab-'+b.replace(/[^a-zA-Z0-9]/g,'_');
+    return `<div style="display:flex;align-items:center;gap:8px;padding:7px 10px;background:var(--surface2);border:1px solid var(--border);border-radius:7px;">
+      <span style="flex:1;font-size:12px;font-weight:500;">${b}</span>
+      <input class="fi" type="text" id="${id}"
+        value="${abbr}" placeholder="ตัวย่อ" maxlength="6"
+        style="width:70px;text-transform:uppercase;font-family:'JetBrains Mono',monospace;font-weight:700;color:var(--accent);"
+        oninput="this.value=this.value.toUpperCase()">
+      <span style="font-size:10px;color:var(--muted);width:48px;text-align:right;">${count} ชิ้น</span>
+      <button onclick="deleteBrandAbbr('${b.replace(/'/g,"\'")}',this)" style="background:none;border:none;color:var(--muted);cursor:pointer;font-size:13px;padding:0 2px;" title="ลบ">×</button>
+    </div>`;
+  }).join('');
+}
+
+function addBrandAbbr(){
+  const name=document.getElementById('newBrandName').value.trim();
+  const abbr=document.getElementById('newBrandAbbr').value.trim().toUpperCase();
+  if(!name){alert('กรุณากรอกชื่อแบรนด์');return;}
+  if(!abbr){alert('กรุณากรอกตัวย่อ');return;}
+  BRAND_ABBR[name]=abbr;
+  document.getElementById('newBrandName').value='';
+  document.getElementById('newBrandAbbr').value='';
+  renderBrandSettings();
+}
+
+function deleteBrandAbbr(brand, btn){
+  delete BRAND_ABBR[brand];
+  btn.closest('div').remove();
+}
+
+function saveSettings(){
+  // Save type prefixes
+  const allTypes=[...new Set([...Object.keys(TYPE_PREFIX),...REGISTRY.map(r=>r.type)])].sort();
+  allTypes.forEach(t=>{
+    const el=document.getElementById('pfx-'+t.replace(/[^a-zA-Z0-9]/g,'_'));
+    if(el) TYPE_PREFIX[t]=el.value.trim().toUpperCase();
+  });
+  // Save brand abbreviations
+  const allBrands=[...new Set([...Object.keys(BRAND_ABBR),...REGISTRY.map(r=>r.brand).filter(Boolean)])].sort();
+  allBrands.forEach(b=>{
+    const el=document.getElementById('bab-'+b.replace(/[^a-zA-Z0-9]/g,'_'));
+    if(el) BRAND_ABBR[b]=el.value.trim().toUpperCase();
+  });
+  closeModal('settings');
+  previewSerials();
+}
+
+function setBuySerialMode(mode){
+  buySerialMode = mode;
+  ['auto','manual','none'].forEach(m=>{
+    const btn = document.getElementById('bsm-'+m);
+    const isActive = m === mode;
+    btn.style.borderColor = isActive ? 'var(--accent)' : 'var(--border)';
+    btn.style.background  = isActive ? 'rgba(0,212,255,.12)' : 'transparent';
+    btn.style.color       = isActive ? 'var(--accent)' : 'var(--muted)';
+  });
+  document.getElementById('b-modeAuto').style.display   = mode==='auto'  ?'':'none';
+  document.getElementById('b-modeManual').style.display = mode==='manual'?'':'none';
+  document.getElementById('b-modeNone').style.display   = mode==='none'  ?'':'none';
+  if(mode==='auto') previewSerials();
+}
+
+// ── Extract short item code from tool name ──
+// "DIA10 - 4F - FF" → "DIA10"
+// "DCMT 11T304GK TN610 KYOCERA" → "DCMT11T304GK"
+// "DIA8 X 8D X 60L 4F H-PRO..." → "DIA8"
+function itemCodeFromName(name){
+  if(!name) return '';
+  const clean = name.replace(/[-–—]/g,' ').trim();
+  const tokens = clean.split(/\s+/).filter(t=>t.length>0);
+  if(tokens.length===0) return '';
+  // First token is most specific: DIA10, DCMT, M6...
+  let code = tokens[0].replace(/[^A-Za-z0-9]/g,'').toUpperCase();
+  return code.slice(0,10);
+}
+
+// Short brand code — lookup BRAND_ABBR first, fallback to auto-truncate
+function brandCodeFromBrand(brand){
+  if(!brand) return '';
+  // Exact match in settings
+  if(BRAND_ABBR[brand]) return BRAND_ABBR[brand];
+  // Case-insensitive match
+  const key = Object.keys(BRAND_ABBR).find(k=>k.toLowerCase()===brand.toLowerCase());
+  if(key) return BRAND_ABBR[key];
+  // Fallback: strip special chars, max 4 chars
+  const clean = brand.replace(/[-_\s]/g,'').toUpperCase();
+  return clean.slice(0,4);
+}
+
+// Build the full prefix: TYPE-YY-ITEM-BRAND
+function buildSerialPrefix(type, name){
+  const typeCode  = TYPE_PREFIX[type] || type.slice(0,3).toUpperCase();
+  const yy        = new Date().getFullYear().toString().slice(2);
+  const itemCode  = document.getElementById('b-itemCode')?.value.trim()  || itemCodeFromName(name);
+  const brandRaw  = document.getElementById('b-brand')?.value || '';
+  const brandCode = document.getElementById('b-brandCode')?.value.trim() || brandCodeFromBrand(brandRaw);
+  const parts = [typeCode, yy, itemCode, brandCode].filter(Boolean);
+  return parts.join('-');
+}
+
+// Count existing serials by TYPE-YY-ITEM only (ignoring brand) — ####  นับรวมทุกแบรนด์
+function getNextSerialCounter(prefix){
+  if(!prefix) return 0;
+  // Build a "base prefix" = everything up to but NOT including the brand segment
+  // Full prefix = TYPE-YY-ITEM-BRAND  →  base = TYPE-YY-ITEM
+  // We match: TYPE-YY-ITEM-<anything>-#### OR TYPE-YY-ITEM-####
+  // Strategy: take first 3 segments (TYPE-YY-ITEM) as the base to count against
+  const parts = prefix.split('-');
+  // parts[0]=TYPE, parts[1]=YY, parts[2]=ITEM (may itself contain no dash since itemCode has no dash)
+  // Base = first 3 parts joined
+  const base = parts.slice(0, 3).join('-');
+  const escapedBase = base.replace(/[.*+?^${}()|[\]\\]/g,'\\$&');
+  // Match: BASE-<optional brand stuff>-#### where #### is 4+ digits at end
+  const pat = new RegExp(`^${escapedBase}(?:-.+)?-(\\d+)$`);
+  let max = 0;
+  REGISTRY.forEach(r=>{
+    if(!r.serial) return;
+    const m = r.serial.match(pat);
+    if(m) max = Math.max(max, parseInt(m[1]));
+  });
+  return max;
+}
+
+function generateSerials(prefix, qty){
+  const start = getNextSerialCounter(prefix) + 1;
+  const serials = [];
+  for(let i=0; i<qty; i++){
+    serials.push(`${prefix}-${String(start+i).padStart(2,'0')}`);
+  }
+  return serials;
+}
+
+function previewSerials(){
+  const type  = document.getElementById('b-type')?.value  || '';
+  const name  = document.getElementById('b-name')?.value  || '';
+  const brand = document.getElementById('b-brand')?.value || '';
+  const qty   = parseInt(document.getElementById('b-autoQty')?.value) || 1;
+
+  // Auto-fill itemCode if empty
+  const itemEl = document.getElementById('b-itemCode');
+  if(itemEl && !itemEl.value && name) itemEl.value = itemCodeFromName(name);
+
+  // Auto-fill brandCode if empty
+  const brandCodeEl = document.getElementById('b-brandCode');
+  if(brandCodeEl && !brandCodeEl.value && brand) brandCodeEl.value = brandCodeFromBrand(brand);
+
+  const prefix = buildSerialPrefix(type, name);
+
+  const hintEl = document.getElementById('b-formatHint');
+  if(hintEl) hintEl.textContent = prefix ? `${prefix}-##` : 'TYPE-YY-ITEM-BRAND-##';
+
+  if(!prefix){ document.getElementById('b-serialPreview').innerHTML='<span style="color:var(--muted);font-size:10px;">กรอกข้อมูล Tool ด้านบนก่อนครับ</span>'; return; }
+
+  const serials = generateSerials(prefix, Math.min(qty, 20));
+  const more = qty > 20 ? qty - 20 : 0;
+  const previewEl = document.getElementById('b-serialPreview');
+  if(previewEl) previewEl.innerHTML =
+    serials.map(s=>`<span class="mono" style="font-size:10px;color:var(--accent);background:rgba(0,212,255,.1);padding:2px 7px;border-radius:4px;">${s}</span>`).join(' ')
+    + (more > 0 ? `<span style="color:var(--muted);font-size:10px;"> +${more} อีก...</span>` : '');
+}
+
+function addSerial(){
+  const inp=document.getElementById('b-serialInput');
+  const v=inp.value.trim().toUpperCase();
+  if(!v)return;
+  if(buySerials.includes(v)){alert('Serial นี้มีแล้ว');return;}
+  if(REGISTRY.find(r=>r.serial===v)){alert(`Serial "${v}" มีในระบบแล้ว`);return;}
+  buySerials.push(v);
+  inp.value='';
+  renderBuySerials();
+}
+function removeSerial(s){buySerials=buySerials.filter(x=>x!==s);renderBuySerials();}
+function renderBuySerials(){
+  const el=document.getElementById('b-serialList');
+  el.innerHTML=buySerials.map(s=>`<div style="display:inline-flex;align-items:center;gap:5px;background:rgba(0,212,255,.15);color:var(--accent);padding:3px 8px;border-radius:4px;font-size:11px;font-family:'JetBrains Mono',monospace;">
+    ${s} <span onclick="removeSerial('${s}')" style="cursor:pointer;color:var(--muted);font-weight:700;">×</span>
+  </div>`).join('');
+  document.getElementById('b-serialCount').textContent=buySerials.length+' Serial';
+}
+
+// ISSUE stock list
+// ── Issue multi-select basket ──
+let issSelected = new Set(); // Set of reg ids
+let issQtyMap   = {};        // id → qty (for no-serial items)
+
+function renderIssueStockList(){
+  const q=(document.getElementById('iss-filter')?.value||'').toLowerCase();
+  const tf=document.getElementById('iss-typeFilter')?.value||'';
+  const stockItems=REGISTRY.filter(r=>r.status==='stock'&&(!tf||r.type===tf)&&(!q||r.name.toLowerCase().includes(q)||(r.serial||'').toLowerCase().includes(q)));
+  const el=document.getElementById('issueStockList');
+  if(stockItems.length===0){el.innerHTML='<div style="padding:14px;color:var(--muted);font-size:12px;text-align:center;">ไม่มี Tool ใน Stock</div>';return;}
+  el.innerHTML=stockItems.map(r=>{
+    const sel=issSelected.has(r.id);
+    const stockQty=r.hasSerial?null:(r.qty||1);
+    return `<div onclick="toggleIssueItem('${r.id}',this)" id="isrow-${r.id}"
+      style="padding:9px 13px;cursor:pointer;border-bottom:1px solid var(--border);font-size:12px;display:flex;align-items:center;gap:10px;${sel?'background:rgba(245,158,11,.1);':''}">
+      <input type="checkbox" style="cursor:pointer;accent-color:var(--yellow);width:15px;height:15px;" ${sel?'checked':''} onclick="event.stopPropagation();toggleIssueItem('${r.id}',this.closest('div'))">
+      <div style="flex:1;">
+        <div><span class="tag ${tagCls(r.type)}" style="font-size:9px;">${r.type}</span> <strong>${r.name}</strong>
+          ${!r.hasSerial?`<span style="font-size:10px;color:var(--muted);margin-left:6px;">คงเหลือ ${stockQty} ชิ้น</span>`:''}
+        </div>
+        <div style="color:${r.hasSerial?'var(--accent)':'var(--muted)'};font-size:10px;margin-top:2px;font-family:'JetBrains Mono',monospace;">
+          ${r.hasSerial?r.serial:'<em>ไม่มี Serial</em>'} · ${r.brand||''} · ซื้อ ${r.buyDate||''}
+        </div>
+      </div>
+      ${sel?'<span style="color:var(--yellow);font-size:14px;">✓</span>':''}
+    </div>`;
+  }).join('');
+}
+
+function toggleIssueItem(id, el){
+  if(issSelected.has(id)){
+    issSelected.delete(id);
+    delete issQtyMap[id];
+    el.style.background='';
+    el.querySelector('input[type=checkbox]').checked=false;
+    const tick=el.querySelector('span[style*="✓"]');if(tick)tick.remove();
+  } else {
+    const r=REGISTRY.find(x=>x.id===id);
+    issSelected.add(id);
+    if(!r.hasSerial) issQtyMap[id]=1; // default qty 1
+    el.style.background='rgba(245,158,11,.1)';
+    el.querySelector('input[type=checkbox]').checked=true;
+    if(!el.querySelector('span[style*="✓"]'))el.insertAdjacentHTML('beforeend','<span style="color:var(--yellow);font-size:14px;">✓</span>');
+  }
+  renderIssueBasket();
+  selectedRegId=issSelected.size===1?[...issSelected][0]:null;
+}
+
+function setIssQty(id, val){
+  const r=REGISTRY.find(x=>x.id===id);
+  const max=r?.qty||999;
+  const v=Math.max(1,Math.min(parseInt(val)||1,max));
+  issQtyMap[id]=v;
+  // update input value if out of range
+  const inp=document.getElementById('issqty-'+id);
+  if(inp&&parseInt(inp.value)!==v) inp.value=v;
+}
+
+function renderIssueBasket(){
+  const basket=document.getElementById('issueBasket');
+  const items=document.getElementById('issBasketItems');
+  const cnt=document.getElementById('issBasketCount');
+  if(issSelected.size===0){basket.style.display='none';return;}
+  basket.style.display='';
+  cnt.textContent=issSelected.size;
+  items.innerHTML=[...issSelected].map(id=>{
+    const r=REGISTRY.find(x=>x.id===id);
+    if(!r) return '';
+    const label=r.hasSerial?r.serial:r.name.slice(0,18);
+    const stockQty=r.qty||1;
+    const qtyInput=!r.hasSerial
+      ? `<input id="issqty-${id}" type="number" min="1" max="${stockQty}" value="${issQtyMap[id]||1}"
+           onclick="event.stopPropagation()"
+           onchange="setIssQty('${id}',this.value)"
+           style="width:44px;padding:1px 4px;font-size:10px;border:1px solid var(--yellow);border-radius:3px;background:var(--surface2);color:var(--fg);text-align:center;">`
+      : '';
+    return `<div style="display:inline-flex;align-items:center;gap:4px;background:rgba(245,158,11,.15);color:var(--yellow);padding:3px 8px;border-radius:4px;font-size:10px;font-family:'JetBrains Mono',monospace;">
+      <span>${label}</span>
+      ${qtyInput}
+      <span onclick="toggleIssueItem('${id}',document.getElementById('isrow-${id}'))" style="cursor:pointer;font-weight:700;margin-left:2px;color:var(--muted);">×</span>
+    </div>`;
+  }).join('');
+  // Re-render replace serial fields if in replace mode
+  const action = document.getElementById('iss-action')?.value;
+  if(action === 'เปลี่ยน') renderReplaceSerialFields();
+}
+
+function issClearAll(){
+  issSelected.clear();
+  issQtyMap={};
+  renderIssueStockList();
+  renderIssueBasket();
+}
+
+function selectIssueItem(id,el){ toggleIssueItem(id,el); } // backward compat
+
+// RETURN mode + issue list
+function setRetMode(mode){
+  retCurrentMode=mode;
+  const isIssue=mode==='issue';
+  document.getElementById('ret-modeIssue').style.display=isIssue?'':'none';
+  document.getElementById('ret-modeManual').style.display=isIssue?'none':'';
+  const bA=document.getElementById('ret-modeA'),bB=document.getElementById('ret-modeB');
+  bA.style.borderColor=isIssue?'var(--orange)':'var(--border)';
+  bA.style.background=isIssue?'rgba(249,115,22,.15)':'transparent';
+  bA.style.color=isIssue?'var(--orange)':'var(--muted)';
+  bB.style.borderColor=!isIssue?'var(--orange)':'var(--border)';
+  bB.style.background=!isIssue?'rgba(249,115,22,.15)':'transparent';
+  bB.style.color=!isIssue?'var(--orange)':'var(--muted)';
+  if(isIssue){retSelectedTxnId=null;retSelectedSerials=new Set();document.getElementById('ret-step2').style.display='none';renderReturnIssueList();}
+}
+function renderReturnIssueList(){
+  const q=(document.getElementById('ret-issueFilter')?.value||'').toLowerCase();
+  // Show inuse tools
+  const inuse=REGISTRY.filter(r=>r.status==='inuse'&&(!q||r.name.toLowerCase().includes(q)||(r.serial||'').toLowerCase().includes(q)));
+  const el=document.getElementById('retIssueList');
+  if(inuse.length===0){el.innerHTML='<div style="padding:14px;color:var(--muted);font-size:12px;text-align:center;">ไม่มี Tool ที่กำลังใช้งานอยู่</div>';return;}
+  // Group by name+dept+holder for display
+  el.innerHTML=inuse.map(r=>`<div onclick="selectReturnItem('${r.id}',this)"
+    id="retrow-${r.id}"
+    style="padding:9px 13px;cursor:pointer;border-bottom:1px solid var(--border);font-size:12px;display:flex;align-items:center;gap:8px;">
+    <input type="radio" name="retSel" style="cursor:pointer;">
+    <div style="flex:1;">
+      <div><span class="tag ${tagCls(r.type)}" style="font-size:9px;">${r.type}</span> <strong>${r.name}</strong></div>
+      <div style="font-size:10px;margin-top:2px;display:flex;gap:8px;">
+        <span style="color:${r.hasSerial?'var(--accent)':'var(--muted)'};font-family:'JetBrains Mono',monospace;">${r.hasSerial?r.serial:'N/A'}</span>
+        <span style="color:var(--muted);">${r.dept||''} · ${r.holder||''}</span>
+      </div>
+    </div>
+    <span class="sp sp-inuse" style="font-size:9px;">In Use</span>
+  </div>`).join('');
+}
+function selectReturnItem(id,el){
+  selectedRegId=id;
+  document.querySelectorAll('#retIssueList > div').forEach(d=>d.style.background='');
+  el.style.background='rgba(249,115,22,.1)';
+  el.querySelector('input').checked=true;
+  const r=REGISTRY.find(x=>x.id===id);
+  document.getElementById('ret-txnInfo').textContent=`${r.name} · Serial: ${r.serial||'N/A'} · ${r.dept||''} · ${r.holder||''}`;
+  document.getElementById('ret-person').value=r.holder||'';
+  document.getElementById('ret-step2').style.display='';
+  // For no-serial: show qty input; for serial: just confirm
+  if(!r.hasSerial){
+    document.getElementById('ret-noSerialQtyRow').style.display='';
+    document.getElementById('ret-maxQtyHint').textContent='(คืน 1 ชิ้น)';
+    document.getElementById('ret-serialPicker').innerHTML='';
+  } else {
+    document.getElementById('ret-noSerialQtyRow').style.display='none';
+    document.getElementById('ret-serialPicker').innerHTML=`<div style="padding:10px 13px;display:flex;align-items:center;gap:8px;font-size:12px;">
+      <span style="color:var(--green);font-size:15px;">✓</span>
+      <span style="font-family:'JetBrains Mono',monospace;color:var(--accent);">${r.serial}</span>
+      <span class="tag to" style="margin-left:auto;font-size:9px;">เลือกอัตโนมัติ</span>
+    </div>`;
+  }
+}
+
+// REISSUE stock list
+function renderRiStockList(){
+  const available=REGISTRY.filter(r=>r.status==='used_ok');
+  const el=document.getElementById('riStockList');
+  if(available.length===0){el.innerHTML='<div style="padding:14px;color:var(--muted);font-size:12px;text-align:center;">ยังไม่มี Tool ที่ผ่าน Inspect แล้ว</div>';return;}
+  el.innerHTML=available.map(r=>`<div onclick="selectRiItem('${r.id}',this)"
+    id="rirow-${r.id}"
+    style="padding:9px 13px;cursor:pointer;border-bottom:1px solid var(--border);font-size:12px;display:flex;align-items:center;gap:8px;">
+    <input type="radio" name="riSel" style="cursor:pointer;">
+    <div style="flex:1;">
+      <div><span class="tag ${tagCls(r.type)}" style="font-size:9px;">${r.type}</span> <strong>${r.name}</strong></div>
+      <div style="color:${r.hasSerial?'var(--accent)':'var(--muted)'};font-size:10px;margin-top:2px;font-family:'JetBrains Mono',monospace;">
+        ${r.hasSerial?r.serial:'N/A'} · ราคา: ${r.price>0?'฿'+r.price.toLocaleString('th'):'ไม่ทราบ'}
+      </div>
+    </div>
+    <span class="sp sp-ok" style="font-size:9px;">Used OK</span>
+  </div>`).join('');
+}
+function selectRiItem(id,el){
+  selectedRegId=id;
+  document.querySelectorAll('#riStockList > div').forEach(d=>d.style.background='');
+  el.style.background='rgba(34,197,94,.1)';
+  el.querySelector('input').checked=true;
+}
+
+// ═══════════════════════════════════════════
+//  SUBMIT
+// ═══════════════════════════════════════════
+// ═══════════════════════════════════════════
+//  BULK SELECT & DELETE
+// ═══════════════════════════════════════════
+const selections = {}; // page -> Set of ids
+
+function getSelSet(page){
+  if(!selections[page]) selections[page] = new Set();
+  return selections[page];
+}
+
+function toggleSel(page, id, cb){
+  const s = getSelSet(page);
+  if(cb.checked) s.add(id); else s.delete(id);
+  const row = cb.closest('tr');
+  if(row) row.classList.toggle('selected-row', cb.checked);
+  updateBulkBar(page);
+}
+
+function toggleSelAll(page, masterCb){
+  const s = getSelSet(page);
+  const cbs = document.querySelectorAll(`.cb-${page}`);
+  cbs.forEach(cb=>{
+    cb.checked = masterCb.checked;
+    const id = cb.dataset.id;
+    if(masterCb.checked) s.add(id); else s.delete(id);
+    const row = cb.closest('tr');
+    if(row) row.classList.toggle('selected-row', masterCb.checked);
+  });
+  updateBulkBar(page);
+}
+
+function updateBulkBar(page){
+  const s = getSelSet(page);
+  const bar = document.getElementById('bulk-bar-'+page);
+  const cnt = document.getElementById('bulk-cnt-'+page);
+  if(!bar) return;
+  if(s.size > 0){ bar.classList.add('show'); if(cnt) cnt.textContent = s.size; }
+  else { bar.classList.remove('show'); }
+}
+
+function clearSel(page){
+  getSelSet(page).clear();
+  document.querySelectorAll(`.cb-${page}`).forEach(cb=>{ cb.checked=false; cb.closest('tr')?.classList.remove('selected-row'); });
+  const master = document.getElementById('cb-all-'+page);
+  if(master) master.checked = false;
+  updateBulkBar(page);
+}
+
+function bulkDelete(page){
+  const s = getSelSet(page);
+  if(s.size === 0) return;
+  const isReg = page === 'reg';
+  const warn = isReg ? '' : '\n\n⚠ Transaction ที่มีผลต่อ Status Tool จะไม่ rollback อัตโนมัติ';
+  if(!confirm(`ลบ ${s.size} รายการที่เลือก?${warn}`)) return;
+
+  if(isReg){
+    s.forEach(id=>{
+      const idx = REGISTRY.findIndex(r=>r.id===id);
+      if(idx>-1){
+        REGISTRY.splice(idx,1);
+        // remove related txns
+        for(let i=TXNS.length-1;i>=0;i--){ if(TXNS[i].toolId===id) TXNS.splice(i,1); }
+      }
+    });
+    clearSel('reg');
+    renderRegistry();
+    updateBadges();scheduleSave();
+  } else {
+    s.forEach(id=>{ const i=TXNS.findIndex(t=>t.id===id); if(i>-1) TXNS.splice(i,1); });
+    clearSel(page);
+    if(page==='buy') renderBuy();
+    if(page==='issue') renderIssue();
+    if(page==='ret') renderReturn();
+    if(page==='ri') renderReissue();
+    scheduleSave();
+  }
+}
+
+// ═══════════════════════════════════════════
+//  BULK SELECT + DELETE
+// ═══════════════════════════════════════════
+function updateBulkBar(page){
+  const chks = [...document.querySelectorAll(`.${page==='reg'?'reg':page}-chk:checked`)].length;
+  const total = document.querySelectorAll(`.${page==='reg'?'reg':page}-chk`).length;
+  const bar = document.getElementById('bulk-'+(page==='reg'?'reg':page));
+  const countEl = document.getElementById('bulk-'+(page==='reg'?'reg':page)+'-count');
+  if(bar){ bar.classList.toggle('show', chks>0); }
+  if(countEl) countEl.textContent = chks+' / '+total+' รายการ';
+  // sync header checkboxes
+  const hdr = document.getElementById('chk-'+(page==='reg'?'reg':page)+'-all');
+  const hdr2 = document.getElementById('chk-'+(page==='reg'?'reg':page)+'-all2');
+  const allChecked = chks===total && total>0;
+  if(hdr) hdr.checked=allChecked;
+  if(hdr2) hdr2.checked=allChecked;
+}
+
+function toggleAllReg(checked){
+  document.querySelectorAll('.reg-chk').forEach(c=>c.checked=checked);
+  updateBulkBar('reg');
+  // sync both header checkboxes
+  const h1=document.getElementById('chk-reg-all'); if(h1) h1.checked=checked;
+  const h2=document.getElementById('chk-reg-all2'); if(h2) h2.checked=checked;
+}
+
+function toggleAll(page, checked){
+  document.querySelectorAll(`.${page}-chk`).forEach(c=>c.checked=checked);
+  updateBulkBar(page);
+}
+
+function clearSelReg(){
+  document.querySelectorAll('.reg-chk').forEach(c=>c.checked=false);
+  updateBulkBar('reg');
+}
+
+function clearSel(page){
+  document.querySelectorAll(`.${page}-chk`).forEach(c=>c.checked=false);
+  updateBulkBar(page);
+}
+
+function bulkDeleteReg(){
+  const ids=[...document.querySelectorAll('.reg-chk:checked')].map(c=>c.dataset.id);
+  if(ids.length===0) return;
+  const items=ids.map(id=>{const r=REGISTRY.find(x=>x.id===id);return r?(r.hasSerial?r.serial:r.name):id;});
+  if(!confirm('ลบ '+ids.length+' รายการ?\n\n'+items.slice(0,10).join('\n')+(items.length>10?'\nและอีก '+(items.length-10)+' รายการ':'')+' \n\n⚠ จะลบ Transaction ที่เกี่ยวข้องด้วย')) return;
+  ids.forEach(id=>{
+    const idx=REGISTRY.findIndex(x=>x.id===id);
+    if(idx>-1) REGISTRY.splice(idx,1);
+    // remove related txns
+    for(let i=TXNS.length-1;i>=0;i--){ if(TXNS[i].toolId===id) TXNS.splice(i,1); }
+  });
+  renderRegistry(); updateBadges();
+}
+
+function bulkDeleteTxn(page){
+  const ids=[...document.querySelectorAll(`.${page}-chk:checked`)].map(c=>c.dataset.id);
+  if(ids.length===0) return;
+  const hasStatusEffect = ids.some(id=>{
+    const t=TXNS.find(x=>x.id===id);
+    return t&&['issue','return','reissue','inspect'].includes(t.event);
+  });
+  const warn = hasStatusEffect ? '\n\n⚠ บาง Transaction มีผลต่อ Status Tool — Status จะไม่ rollback อัตโนมัติ' : '';
+  if(!confirm(`ลบ ${ids.length} รายการ?${warn}`)) return;
+  ids.forEach(id=>{ const i=TXNS.findIndex(x=>x.id===id); if(i>-1) TXNS.splice(i,1); });
+  if(page==='buy') renderBuy();
+  if(page==='issue') renderIssue();
+  if(page==='return') renderReturn();
+  if(page==='reissue') renderReissue();
+}
+
+// ═══════════════════════════════════════════
+//  DELETE FUNCTIONS
+// ═══════════════════════════════════════════
+
+function deleteRegistry(id){
+  const r = REGISTRY.find(x=>x.id===id);
+  if(!r) return;
+  const label = r.hasSerial ? r.serial : r.name+' (qty)';
+  if(!confirm(`ลบรายการนี้ออกจากระบบ?
+
+"${label}"
+Status: ${r.status}
+
+⚠ การลบจะไม่สามารถย้อนกลับได้`)) return;
+  // Remove from REGISTRY
+  const idx = REGISTRY.indexOf(r);
+  REGISTRY.splice(idx, 1);
+  // Remove related transactions
+  const relTxns = TXNS.filter(t=>t.toolId===id);
+  relTxns.forEach(t=>{ const i=TXNS.indexOf(t); if(i>-1) TXNS.splice(i,1); });
+  renderRegistry();
+  updateBadges();
+}
+
+function deleteTxn(id){
+  const t = TXNS.find(x=>x.id===id);
+  if(!t) return;
+  const label = `[${t.event.toUpperCase()}] ${t.date} — ${t.name}${t.serial?' ('+t.serial+')':''}`;
+
+  // Warn if deleting affects registry status
+  const affectsStatus = ['issue','return','reissue','inspect'].includes(t.event);
+  const warn = affectsStatus ? '\n\n⚠ Transaction นี้มีผลต่อ Status ของ Tool ในระบบ\nStatus จะไม่ถูก rollback อัตโนมัติ กรุณาตรวจสอบ Tool Registry ด้วย' : '';
+  if(!confirm(`ลบ Transaction นี้?
+
+${label}${warn}`)) return;
+
+  const idx = TXNS.indexOf(t);
+  TXNS.splice(idx, 1);
+  // Re-render current page
+  const pages = ['buy','issue','return','reissue'];
+  pages.forEach(p=>{
+    const el=document.getElementById('page-'+p);
+    if(el&&el.classList.contains('active')){
+      if(p==='buy') renderBuy();
+      if(p==='issue') renderIssue();
+      if(p==='return') renderReturn();
+      if(p==='reissue') renderReissue();
+    scheduleSave();
+    }
+  });
+}
+
+// ═══════════════════════════════════════════
+//  AUTOCOMPLETE
+// ═══════════════════════════════════════════
+let acIndex = -1;
+
+function acOptions(field, q){
+  const ql = (q||'').toLowerCase().trim();
+  if(field==='name'){
+    // unique names filtered by current type
+    const type = document.getElementById('b-type')?.value||'';
+    const all = [...new Set(REGISTRY.filter(r=>!type||r.type===type).map(r=>r.name))].sort();
+    return all.filter(x=>!ql||x.toLowerCase().includes(ql)).slice(0,12)
+      .map(x=>({label:x, sub:''}));
+  }
+  if(field==='brand'){
+    const all = [...new Set(REGISTRY.map(r=>r.brand).filter(Boolean))].sort();
+    return all.filter(x=>!ql||x.toLowerCase().includes(ql)).slice(0,10)
+      .map(x=>({label:x, sub: REGISTRY.filter(r=>r.brand===x).length+' รายการ'}));
+  }
+  if(field==='supplier'){
+    const all = [...new Set(TXNS.filter(t=>t.event==='buy'&&t.supplier).map(t=>t.supplier))].sort();
+    return all.filter(x=>!ql||x.toLowerCase().includes(ql)).slice(0,10)
+      .map(x=>({label:x, sub:''}));
+  }
+  return [];
+}
+
+function acShow(field, q){
+  const dd = document.getElementById('ac-'+field);
+  if(!dd) return;
+  acIndex = -1;
+  const opts = acOptions(field, q);
+  const ql = (q||'').trim();
+  const alreadyExists = opts.some(o=>o.label.toLowerCase()===(ql.toLowerCase()));
+
+  let html = opts.map((o,i)=>`
+    <div class="ac-item" id="aci-${field}-${i}" onclick="acPick('${field}','${o.label.replace(/'/g,"\'")}')">
+      <span class="ac-item-label">${highlight(o.label,ql)}</span>
+      ${o.sub?`<span class="ac-item-sub">${o.sub}</span>`:''}
+    </div>`).join('');
+
+  // Show "create new" only if typed something that doesn't exist
+  if(ql && !alreadyExists){
+    html += `<div class="ac-new" onclick="acNew('${field}','${ql.replace(/'/g,"\'")}')">
+      ➕ สร้างใหม่: "<strong>${ql}</strong>"
+    </div>`;
+  }
+
+  if(!html){ dd.style.display='none'; return; }
+  dd.innerHTML = html;
+  dd.style.display = '';
+}
+
+function highlight(text, q){
+  if(!q) return text;
+  const i = text.toLowerCase().indexOf(q.toLowerCase());
+  if(i<0) return text;
+  return text.slice(0,i)+'<mark style="background:rgba(0,212,255,.25);color:var(--accent);border-radius:2px;">'+text.slice(i,i+q.length)+'</mark>'+text.slice(i+q.length);
+}
+
+function acPick(field, val){
+  const el = document.getElementById('b-'+field);
+  if(el){ el.value=val; el.dispatchEvent(new Event('input')); }
+  acClose(field);
+  // If picking a tool name, also auto-fill brand from registry
+  if(field==='name'){
+    const match = REGISTRY.find(r=>r.name===val);
+    if(match){
+      if(match.brand) document.getElementById('b-brand').value=match.brand;
+      if(match.type){
+        const typeEl=document.getElementById('b-type');
+        if(typeEl) typeEl.value=match.type;
+      }
+    }
+    document.getElementById('b-itemCode').value='';
+    document.getElementById('b-brandCode').value='';
+    previewSerials();
+  }
+}
+
+function acNew(field, val){
+  const el = document.getElementById('b-'+field);
+  if(el) el.value = val;
+  acClose(field);
+  if(field==='name'){ document.getElementById('b-itemCode').value=''; previewSerials(); }
+}
+
+function acClose(field){
+  const dd = document.getElementById('ac-'+field);
+  if(dd) dd.style.display='none';
+}
+
+function acKey(e, field){
+  const dd = document.getElementById('ac-'+field);
+  if(!dd || dd.style.display==='none') return;
+  const items = dd.querySelectorAll('.ac-item');
+  if(e.key==='ArrowDown'){ acIndex=Math.min(acIndex+1,items.length-1); acHighlight(field,items); e.preventDefault(); }
+  else if(e.key==='ArrowUp'){ acIndex=Math.max(acIndex-1,0); acHighlight(field,items); e.preventDefault(); }
+  else if(e.key==='Enter' && acIndex>=0){ items[acIndex]?.click(); e.preventDefault(); }
+  else if(e.key==='Escape'){ acClose(field); }
+}
+
+function acHighlight(field, items){
+  items.forEach((el,i)=>{
+    el.style.background = i===acIndex ? 'rgba(0,212,255,.15)' : '';
+  });
+  items[acIndex]?.scrollIntoView({block:'nearest'});
+}
+
+// Close dropdowns when clicking outside
+document.addEventListener('click', e=>{
+  ['name','brand','supplier'].forEach(f=>{
+    const wrap = document.getElementById('b-'+f)?.closest('.ac-wrap');
+    if(wrap && !wrap.contains(e.target)) acClose(f);
+  });
+});
+
+// ===== IMAGE UPLOAD FUNCTIONS =====
+let buyImageData = { receipt: null, tool: null }; // base64 data
+
+function previewImage(prefix) {
+  const input = document.getElementById(prefix + '-input');
+  const file = input.files[0];
+  if (!file) return;
+  // Resize before preview/upload
+  const reader = new FileReader();
+  reader.onload = function(e) {
+    const img = new Image();
+    img.onload = function() {
+      const canvas = document.createElement('canvas');
+      const MAX = 800;
+      let w = img.width, h = img.height;
+      if (w > MAX || h > MAX) {
+        if (w > h) { h = Math.round(h * MAX / w); w = MAX; }
+        else { w = Math.round(w * MAX / h); h = MAX; }
+      }
+      canvas.width = w; canvas.height = h;
+      canvas.getContext('2d').drawImage(img, 0, 0, w, h);
+      const b64 = canvas.toDataURL('image/jpeg', 0.75);
+      // Show preview
+      document.getElementById(prefix + '-img').src = b64;
+      document.getElementById(prefix + '-preview').style.display = 'block';
+      document.getElementById(prefix + '-placeholder').style.display = 'none';
+      // Store
+      if (prefix === 'b-receipt') buyImageData.receipt = b64;
+      else if (prefix === 'b-tool') buyImageData.tool = b64;
+    };
+    img.src = e.target.result;
+  };
+  reader.readAsDataURL(file);
+}
+
+async function uploadImageToGAS(b64, filename) {
+  if (!GAS_URL || !b64) return null;
+  try {
+    const res = await fetch(GAS_URL, {
+      method: 'POST',
+      body: JSON.stringify({ action: 'uploadImage', filename, data: b64 })
+    });
+    const json = await res.json();
+    return json.url || null;
+  } catch(e) { return null; }
+}
+
+function resetBuyImages() {
+  buyImageData = { receipt: null, tool: null };
+  ['b-receipt','b-tool'].forEach(p => {
+    const el = document.getElementById(p+'-input');
+    if(el) el.value = '';
+    const prev = document.getElementById(p+'-preview');
+    if(prev) prev.style.display = 'none';
+    const ph = document.getElementById(p+'-placeholder');
+    if(ph) ph.style.display = 'block';
+  });
+  const st = document.getElementById('b-upload-status');
+  if(st) st.textContent = '';
+}
+
+// Tool image modal
+function openToolImageModal(regId) {
+  const tool = REGISTRY.find(r => r.id === regId);
+  if (!tool) return;
+  const existing = tool.imageUrl || null;
+  const html = `
+    <div class="mo" id="mo-toolimg" style="display:flex;" onclick="if(event.target===this)closeToolImageModal()">
+      <div class="modal" style="max-width:420px;">
+        <div class="mt">🖼 รูป Tool — ${tool.name}</div>
+        <div style="text-align:center;margin:12px 0;">
+          ${existing ? `<img src="${existing}" style="max-width:100%;max-height:220px;border-radius:8px;margin-bottom:8px;"><br>` : ''}
+          <div id="toolimg-preview-wrap" style="${existing?'':''}">
+            <img id="toolimg-preview-img" style="max-width:100%;max-height:220px;border-radius:8px;display:none;margin-bottom:8px;">
+          </div>
+          <div id="toolimg-upload-area" onclick="document.getElementById('toolimg-input').click()"
+            style="border:2px dashed var(--border);border-radius:8px;padding:16px;cursor:pointer;color:var(--muted);font-size:13px;">
+            📷 ${existing ? 'เปลี่ยนรูปใหม่' : 'คลิกเพื่อเลือกรูป'}
+          </div>
+          <input type="file" id="toolimg-input" accept="image/*" style="display:none" onchange="previewToolImage()">
+        </div>
+        <div id="toolimg-status" style="font-size:11px;color:var(--muted);text-align:center;min-height:16px;"></div>
+        <div class="mf">
+          <button class="btn btn-outline" onclick="closeToolImageModal()">ยกเลิก</button>
+          <button class="btn btn-primary" onclick="saveToolImage('${regId}')">💾 บันทึกรูป</button>
+        </div>
+      </div>
+    </div>`;
+  document.body.insertAdjacentHTML('beforeend', html);
+}
+function closeToolImageModal() {
+  const el = document.getElementById('mo-toolimg');
+  if(el) el.remove();
+  window._toolImgB64 = null;
+}
+function previewToolImage() {
+  const file = document.getElementById('toolimg-input').files[0];
+  if(!file) return;
+  const reader = new FileReader();
+  reader.onload = function(e) {
+    const img = new Image();
+    img.onload = function() {
+      const canvas = document.createElement('canvas');
+      const MAX = 800;
+      let w = img.width, h = img.height;
+      if(w>MAX||h>MAX){ if(w>h){h=Math.round(h*MAX/w);w=MAX;}else{w=Math.round(w*MAX/h);h=MAX;} }
+      canvas.width=w; canvas.height=h;
+      canvas.getContext('2d').drawImage(img,0,0,w,h);
+      const b64 = canvas.toDataURL('image/jpeg',0.75);
+      window._toolImgB64 = b64;
+      const imgEl = document.getElementById('toolimg-preview-img');
+      imgEl.src = b64; imgEl.style.display = 'block';
+      document.getElementById('toolimg-upload-area').textContent = '✅ รูปพร้อมบันทึก';
+    };
+    img.src = e.target.result;
+  };
+  reader.readAsDataURL(file);
+}
+async function saveToolImage(regId) {
+  const b64 = window._toolImgB64;
+  if(!b64){ alert('กรุณาเลือกรูปก่อน'); return; }
+  const st = document.getElementById('toolimg-status');
+  st.textContent = '⏳ กำลังอัพโหลด...';
+  const url = await uploadImageToGAS(b64, 'tool_'+regId+'_'+Date.now()+'.jpg');
+  if(url) {
+    const tool = REGISTRY.find(r=>r.id===regId);
+    if(tool) { tool.imageUrl = url; scheduleSave(); }
+    st.textContent = '✅ บันทึกสำเร็จ';
+    setTimeout(()=>{ closeToolImageModal(); renderRegistry(); }, 800);
+  } else {
+    // fallback: store base64 directly
+    const tool = REGISTRY.find(r=>r.id===regId);
+    if(tool) { tool.imageUrl = b64; scheduleSave(); }
+    st.textContent = '✅ บันทึกสำเร็จ (local)';
+    setTimeout(()=>{ closeToolImageModal(); renderRegistry(); }, 800);
+  }
+}
+// ===== END IMAGE FUNCTIONS =====
+
+function submitBuy(){
+  const type=document.getElementById('b-type').value;
+  const name=document.getElementById('b-name').value.trim();
+  const brand=document.getElementById('b-brand').value.trim();
+  const date=document.getElementById('b-date').value;
+  const supplier=document.getElementById('b-supplier').value.trim();
+  const price=parseFloat(document.getElementById('b-price').value)||0;
+  const note=document.getElementById('b-note').value;
+  if(!name){alert('กรุณากรอกชื่อ Tool');return;}
+
+  // Resolve serials based on mode
+  let finalSerials=[];
+  const noSer = buySerialMode==='none';
+  if(buySerialMode==='auto'){
+    const qty=parseInt(document.getElementById('b-autoQty').value)||1;
+    const prefix=buildSerialPrefix(type,name);
+    if(!prefix){alert('ไม่สามารถสร้าง Serial ได้ กรุณากรอกชื่อ Tool');return;}
+    finalSerials=generateSerials(prefix,qty);
+  } else if(buySerialMode==='manual'){
+    if(buySerials.length===0){alert('กรุณาเพิ่ม Serial อย่างน้อย 1 ชิ้น');return;}
+    finalSerials=[...buySerials];
+  }
+  const txnId='TXN-'+uid();
+  if(!noSer){
+    finalSerials.forEach(serial=>{
+      const regId='REG-'+uid();
+      REGISTRY.push({id:regId,serial,hasSerial:true,type,name,brand,price,unit:'PCS',
+        status:'stock',holder:null,dept:null,buyDate:date,buyTxnId:txnId,
+        history:[{event:'buy',date,person:'User',note:`Supplier: ${supplier}`,txnId}]});
+      TXNS.push({id:'TXN-'+uid(),event:'buy',date,toolId:regId,serial,hasSerial:true,
+        type,name,brand,qty:1,supplier,price,note});
+    });
+  } else {
+    const qty=parseInt(document.getElementById('b-qty').value)||1;
+    const unit=document.getElementById('b-unit').value||'PCS';
+    for(let i=0;i<qty;i++){
+      const regId='REG-'+uid();
+      REGISTRY.push({id:regId,serial:null,hasSerial:false,type,name,brand,price,unit,
+        status:'stock',holder:null,dept:null,buyDate:date,buyTxnId:txnId,
+        history:[{event:'buy',date,person:'User',note:`Supplier: ${supplier} (${i+1}/${qty})`,txnId}]});
+    }
+    TXNS.push({id:txnId,event:'buy',date,toolId:null,serial:'N/A',hasSerial:false,
+      type,name,brand,qty,supplier,price,note,unit});
+  }
+  // Upload images if any
+  const hasImages = buyImageData.receipt || buyImageData.tool;
+  if(hasImages && GAS_URL){
+    const st = document.getElementById('b-upload-status');
+    if(st) st.textContent = '⏳ กำลังอัพโหลดรูป...';
+    const uploadPromises = [];
+    if(buyImageData.receipt) uploadPromises.push(uploadImageToGAS(buyImageData.receipt,'receipt_'+txnId+'.jpg').then(url=>({type:'receipt',url})));
+    if(buyImageData.tool) uploadPromises.push(uploadImageToGAS(buyImageData.tool,'tool_'+txnId+'.jpg').then(url=>({type:'tool',url})));
+    Promise.all(uploadPromises).then(results=>{
+      results.forEach(r=>{
+        if(r.url){
+          // Attach to txn
+          const txn = TXNS.find(t=>t.id===txnId);
+          if(txn && r.type==='receipt') txn.receiptUrl = r.url;
+          // Attach tool image to all new registry entries
+          if(r.type==='tool'){
+            REGISTRY.filter(t=>t.buyTxnId===txnId).forEach(t=>{ if(!t.imageUrl) t.imageUrl = r.url||buyImageData.tool; });
+          }
+          scheduleSave();
+        }
+      });
+    }).catch(()=>{});
+  } else if(buyImageData.tool) {
+    // Fallback: store base64 tool image locally
+    REGISTRY.filter(t=>t.buyTxnId===txnId).forEach(t=>{ t.imageUrl = buyImageData.tool; });
+  }
+  resetBuyImages();
+  closeModal('buy');
+  renderDashboard();renderBuy();renderRegistry();scheduleSave();
+  alert(`✅ บันทึกนำเข้าสำเร็จ\n"${name}"\n${!noSer?finalSerials.length+' Serial ('+finalSerials[0]+(finalSerials.length>1?' ~ '+finalSerials[finalSerials.length-1]:'')+')':'qty '+document.getElementById('b-qty').value}${hasImages?'\n📷 กำลังอัพโหลดรูปในพื้นหลัง...':''}`);
+}
+
+function updateRetSerialList(){
+  const type = document.getElementById('ret-type')?.value || '';
+  const dl = document.getElementById('ret-serial-list');
+  if(!dl) return;
+  const inuse = REGISTRY.filter(r=>r.status==='inuse' && r.hasSerial && (!type||r.type===type));
+  dl.innerHTML = inuse.map(r=>`<option value="${r.serial}">${r.serial} — ${r.name}${r.holder?' ('+r.holder+')':''}</option>`).join('');
+}
+
+function toggleIssueType(){
+  const action = document.getElementById('iss-action').value;
+  const row = document.getElementById('iss-replace-row');
+  if(action === 'เปลี่ยน'){
+    row.style.display = 'block';
+    renderReplaceSerialFields();
+  } else {
+    row.style.display = 'none';
+  }
+}
+
+function renderReplaceSerialFields(){
+  const container = document.getElementById('iss-replace-items');
+  if(!container) return;
+  const items = [...issSelected].map(id => REGISTRY.find(r=>r.id===id)).filter(Boolean);
+  container.innerHTML = items.map(r => {
+    if(!r.hasSerial){
+      return `<div style="font-size:11px;color:var(--muted);padding:4px 0;">
+        <span style="color:var(--accent);">${r.name}</span> — ไม่มี Serial (ไม่ต้องกรอก)
+      </div>`;
+    }
+    // หา tool inuse ที่ type และ name เดียวกัน
+    const inuseTools = REGISTRY.filter(x=>x.status==='inuse' && x.hasSerial && x.type===r.type && x.name===r.name);
+    const options = inuseTools.map(x=>`<option value="${x.serial}">${x.serial}${x.holder?' ('+x.holder+')':''}</option>`).join('');
+    return `<div style="display:flex;align-items:center;gap:8px;margin-bottom:4px;">
+      <div style="font-size:11px;min-width:100px;color:var(--fg);flex-shrink:0;">${r.name.slice(0,20)}</div>
+      <div style="flex:1;position:relative;">
+        <input class="fi" list="old-serial-list-${r.id}" id="old-serial-${r.id}"
+          placeholder="${inuseTools.length>0?'เลือกหรือพิมพ์ Serial เก่า':'พิมพ์ Serial เก่า (ถ้ามี)'}"
+          style="font-family:'JetBrains Mono',monospace;font-size:11px;padding:5px 8px;width:100%;">
+        <datalist id="old-serial-list-${r.id}">
+          ${options}
+        </datalist>
+        ${inuseTools.length>0?`<div style="font-size:9px;color:var(--muted);margin-top:2px;">พบ ${inuseTools.length} รายการที่กำลังใช้งาน</div>`:''}
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function submitIssue(){
+  if(issSelected.size===0){alert('กรุณาเลือก Tool อย่างน้อย 1 รายการ');return;}
+  const person=document.getElementById('iss-person').value.trim();
+  if(!person){alert('กรุณากรอกชื่อผู้เบิก');return;}
+  const date=document.getElementById('iss-date').value;
+  const dept=document.getElementById('iss-dept').value;
+  const action=document.getElementById('iss-action').value;
+  let count=0;
+  [...issSelected].forEach(id=>{
+    const r=REGISTRY.find(x=>x.id===id);
+    if(!r||r.status!=='stock') return;
+    const qtyEl=document.getElementById('issqty-'+id);
+    const qty=r.hasSerial?1:(qtyEl?Math.max(1,parseInt(qtyEl.value)||1):(issQtyMap[id]||1));
+    const txnId='TXN-'+uid();
+    // Get old serial if replace mode
+    let oldSerial = '';
+    if(action==='เปลี่ยน' && r.hasSerial){
+      const oldEl = document.getElementById('old-serial-'+id);
+      oldSerial = oldEl ? oldEl.value.trim() : '';
+    }
+    r.status='inuse'; r.holder=person; r.dept=dept;
+    if(!r.hasSerial && r.qty!=null) r.qty=Math.max(0,(r.qty||0)-qty);
+    const noteText = action + (oldSerial ? ` (เปลี่ยนจาก: ${oldSerial})` : '');
+    r.history.push({event:'issue',date,person,note:noteText,txnId});
+    TXNS.push({id:txnId,event:'issue',date,toolId:r.id,serial:r.serial,hasSerial:r.hasSerial,
+      type:r.type,name:r.name,brand:r.brand,qty,dept,person,action,
+      oldSerial:oldSerial||null,note:noteText});
+
+    // ถ้าเปลี่ยน Tool → auto คืน Tool เก่าและตั้งสถานะ used_inspect
+    if(action==='เปลี่ยน' && oldSerial){
+      const oldTool = REGISTRY.find(x=>x.hasSerial && x.serial===oldSerial);
+      if(oldTool){
+        const retTxnId='TXN-'+uid();
+        oldTool.status='used_inspect';
+        oldTool.holder=null;
+        oldTool.history.push({event:'return',date,person,
+          note:`คืนเพื่อเปลี่ยน (เบิก: ${r.serial||r.name})`,txnId:retTxnId});
+        TXNS.push({id:retTxnId,event:'return',date,toolId:oldTool.id,
+          serial:oldTool.serial,hasSerial:true,type:oldTool.type,name:oldTool.name,
+          brand:oldTool.brand,qty:1,dept,person,
+          note:`คืนอัตโนมัติ — เปลี่ยนเป็น ${r.serial||r.name}`,
+          status:'used_inspect',retStatus:'used_inspect'});
+      }
+    }
+    count++;
+  });
+  issSelected.clear(); issQtyMap={};
+  closeModal('issue');
+  renderDashboard();renderIssue();renderRegistry();scheduleSave();
+  alert(`✅ เบิก Tool สำเร็จ ${count} รายการ`);
+}
+
+function submitReturn(){
+  const date=document.getElementById('ret-date').value;
+  const person=document.getElementById('ret-person').value.trim();
+  const status=document.getElementById('ret-status').value;
+  const note=document.getElementById('ret-note').value;
+  if(!person){alert('กรุณากรอกชื่อผู้คืน');return;}
+
+  if(retCurrentMode==='issue'){
+    if(!selectedRegId){alert('กรุณาเลือก Tool ที่ต้องการคืน');return;}
+    const r=REGISTRY.find(x=>x.id===selectedRegId);
+    if(!r){alert('ไม่พบ Tool');return;}
+    const txnId='TXN-'+uid();
+    r.status=status;r.holder=null;r.dept=r.dept;
+    r.history.push({event:'return',date,person,note,txnId});
+    TXNS.push({id:txnId,event:'return',date,toolId:r.id,serial:r.serial,hasSerial:r.hasSerial,
+      type:r.type,name:r.name,qty:1,dept:r.dept,person,retStatus:status,note});
+  } else {
+    // manual
+    const name=document.getElementById('ret-name').value.trim();
+    const serial=document.getElementById('ret-serial').value.trim();
+    const qty=parseInt(document.getElementById('ret-qty').value)||1;
+    const dept=document.getElementById('ret-dept').value;
+    const type=document.getElementById('ret-type').value;
+    if(!name){alert('กรุณากรอกชื่อ Tool');return;}
+    const hasSerial=serial&&serial.toLowerCase()!=='n/a';
+    // Create/find registry entry
+    let reg=hasSerial?REGISTRY.find(r=>r.serial===serial):null;
+    if(!reg){
+      const regId='REG-'+uid();
+      reg={id:regId,serial:hasSerial?serial:null,hasSerial,type,name,brand:'',price:0,unit:'PCS',
+        status,holder:null,dept,buyDate:null,buyTxnId:null,
+        history:[{event:'return',date,person,note:'Manual return',txnId:'TXN-'+uid()}]};
+      REGISTRY.push(reg);
+    } else {
+      reg.status=status;reg.holder=null;
+      reg.history.push({event:'return',date,person,note});
+    }
+    const txnId='TXN-'+uid();
+    TXNS.push({id:txnId,event:'return',date,toolId:reg.id,serial:hasSerial?serial:'N/A',hasSerial,
+      type,name,qty,dept,person,retStatus:status,note});
+  }
+  closeModal('return');
+  renderDashboard();renderReturn();renderRegistry();scheduleSave();
+  alert(`✅ บันทึกคืน Tool สำเร็จ\nสภาพ: ${{used_inspect:'🔍 รอ Inspect',used_ok:'✓ Used OK',scrapped:'❌ Scrap'}[status]}`);
+}
+
+function submitReissue(){
+  if(!selectedRegId){alert('กรุณาเลือก Tool ก่อน');return;}
+  const r=REGISTRY.find(x=>x.id===selectedRegId);
+  if(!r||r.status!=='used_ok'){alert('Tool นี้ไม่พร้อมเบิก Used');return;}
+  const person=document.getElementById('ri-person').value.trim();
+  if(!person){alert('กรุณากรอกชื่อผู้เบิก');return;}
+  const date=document.getElementById('ri-date').value;
+  const dept=document.getElementById('ri-dept').value;
+  const saving=r.price||0;
+  const txnId='TXN-'+uid();
+  r.status='inuse';r.holder=person;r.dept=dept;
+  r.history.push({event:'reissue',date,person,note:'Used tool re-issued',txnId});
+  TXNS.push({id:txnId,event:'reissue',date,toolId:r.id,serial:r.serial,hasSerial:r.hasSerial,
+    type:r.type,name:r.name,qty:1,dept,person,saving,note:''});
+  closeModal('reissue');
+  renderDashboard();renderReissue();renderRegistry();scheduleSave();
+  alert(`✅ เบิก Used Tool สำเร็จ\n"${r.name}"\n${saving>0?'ประหยัด: ฿'+saving.toLocaleString('th'):''}`);
+}
+
+// Quick actions from registry/table
+function quickIssue(regId){
+  issSelected.clear();
+  issSelected.add(regId);
+  openModal('issue');
+  setTimeout(()=>{
+    renderIssueBasket();
+    const row=document.getElementById('isrow-'+regId);
+    if(row)row.click();
+  },80);
+}
+function quickReturn(regId){
+  selectedRegId=null;
+  openModal('return');
+  setTimeout(()=>{
+    setRetMode('issue');
+    const row=document.getElementById('retrow-'+regId);
+    if(row){row.click();}
+  },80);
+}
+function quickReissue(regId){
+  selectedRegId=regId;
+  openModal('reissue');
+  setTimeout(()=>{
+    const row=document.getElementById('rirow-'+regId);
+    if(row)row.click();
+  },80);
+}
+
+// Inspect
+let inspectTargetId=null;
+function quickInspectFromReturn(txnId){
+  const txn = TXNS.find(t=>t.id===txnId);
+  if(!txn) return;
+  // หา registry entry จาก toolId หรือ serial
+  const r = REGISTRY.find(x=>x.id===txn.toolId) || REGISTRY.find(x=>x.serial===txn.serial&&x.hasSerial);
+  if(!r){ alert('ไม่พบ Tool ใน Registry'); return; }
+  if(r.status!=='used_inspect'){ alert('Tool นี้ไม่ได้อยู่ในสถานะ "รอ Inspect"'); return; }
+  openInspect(r.id);
+}
+
+function openInspect(regId){
+  inspectTargetId=regId;
+  const r=REGISTRY.find(x=>x.id===regId);
+  document.getElementById('insp-info').textContent=`${r.name} · Serial: ${r.serial||'N/A'}`;
+  document.getElementById('insp-note').value='';
+  document.getElementById('mo-inspect').classList.add('open');
+}
+function submitInspect(){
+  if(!inspectTargetId)return;
+  const r=REGISTRY.find(x=>x.id===inspectTargetId);
+  const result=document.getElementById('insp-result').value;
+  const note=document.getElementById('insp-note').value;
+  const date=today();
+  const txnId='TXN-'+uid();
+  r.status=result;
+  r.history.push({event:'inspect',date,person:'Inspector',note:`${result==='used_ok'?'ผ่าน':'ไม่ผ่าน'}: ${note}`,txnId});
+  // Update return txn if exists
+  const retTxn=TXNS.filter(t=>t.event==='return'&&t.toolId===r.id).pop();
+  if(retTxn)retTxn.retStatus=result;
+  TXNS.push({id:txnId,event:'inspect',date,toolId:r.id,serial:r.serial,hasSerial:r.hasSerial,
+    type:r.type,name:r.name,qty:1,result,note,person:'Inspector'});
+  closeModal('inspect');
+  renderDashboard();renderReturn();renderRegistry();
+  alert(`✅ Inspect สำเร็จ\n"${r.name}"\nผล: ${result==='used_ok'?'✓ ผ่าน — ใช้ได้อีก':'❌ ไม่ผ่าน — Scrap'}`);
+}
+
+// History modal (reuse inspect modal for now)
+function openHistory(regId){
+  const r=REGISTRY.find(x=>x.id===regId);
+  if(!r)return;
+  const hist=r.history.map(h=>`<div class="tl-item">
+    <div class="tl-dot" style="background:${eventColor(h.event)};"></div>
+    <div class="tl-content">
+      <div class="tl-event" style="color:${eventColor(h.event)};">${eventLabel(h.event)}</div>
+      <div class="tl-meta">${h.date} · ${h.person||''} ${h.note?'· '+h.note:''}</div>
+    </div>
+  </div>`).reverse().join('');
+  document.getElementById('insp-info').innerHTML=`
+    <strong>${r.name}</strong><br>
+    Serial: <span style="font-family:'JetBrains Mono',monospace;color:var(--accent);">${r.hasSerial?r.serial:'N/A'}</span>
+    &nbsp;·&nbsp; ${statusPill(r.status)}
+    <div class="timeline" style="margin-top:10px;">${hist||'<span style="color:var(--muted);">ไม่มีประวัติ</span>'}</div>`;
+  document.getElementById('insp-result').parentElement.style.display='none';
+  document.getElementById('insp-note').parentElement.style.display='none';
+  document.getElementById('mo-inspect').classList.add('open');
+  // Hide submit, show only close
+  document.querySelector('#mo-inspect .mf').innerHTML='<button class="btn btn-outline" onclick="closeHistory()">ปิด</button>';
+}
+function closeHistory(){
+  document.getElementById('mo-inspect').classList.remove('open');
+  document.getElementById('insp-result').parentElement.style.display='';
+  document.getElementById('insp-note').parentElement.style.display='';
+  document.querySelector('#mo-inspect .mf').innerHTML=`<button class="btn btn-outline" onclick="closeModal('inspect')">ยกเลิก</button><button class="btn btn-primary" onclick="submitInspect()">✓ บันทึกผล</button>`;
+}
+
+// ═══════════════════════════════════════════
+//  EXPORT
+// ═══════════════════════════════════════════
+function exportCSV(){
+  const page=document.querySelector('.page.active').id.replace('page-','');
+  let rows,headers,filename;
+  if(page==='registry'){
+    headers=['Serial','ประเภท','รายการ','แบรนด์','Status','ผู้ถือ','แผนก','ซื้อเมื่อ','ราคา'];
+    rows=REGISTRY.map(r=>[r.hasSerial?r.serial:'N/A',r.type,r.name,r.brand||'',r.status,r.holder||'',r.dept||'',r.buyDate||'',r.price]);
+    filename='tool_registry.csv';
+  } else if(page==='buy'){
+    headers=['TxnID','วันที่','ประเภท','รายการ','Serial','Qty','Supplier','ราคา'];
+    rows=TXNS.filter(t=>t.event==='buy').map(t=>[t.id,t.date,t.type,t.name,t.serial||'N/A',t.qty,t.supplier||'',t.price]);
+    filename='buy_txns.csv';
+  } else if(page==='issue'){
+    headers=['TxnID','วันที่','ประเภท','รายการ','Serial','Qty','แผนก','ผู้เบิก','Action'];
+    rows=TXNS.filter(t=>t.event==='issue').map(t=>[t.id,t.date,t.type,t.name,t.serial||'N/A',t.qty,t.dept||'',t.person||'',t.action||'']);
+    filename='issue_txns.csv';
+  } else {
+    headers=['TxnID','วันที่','Event','ประเภท','รายการ','Serial','Qty','แผนก','ผู้ดำเนินการ','หมายเหตุ'];
+    rows=TXNS.map(t=>[t.id,t.date,t.event,t.type,t.name,t.serial||'N/A',t.qty,t.dept||'',t.person||'',t.note||'']);
+    filename='all_txns.csv';
+  }
+  const csv='\uFEFF'+[headers,...rows].map(r=>r.map(v=>`"${v??''}"`).join(',')).join('\n');
+  const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([csv],{type:'text/csv;charset=utf-8'}));a.download=filename;a.click();
+}
+
+function exportExcel(){
+  if(typeof XLSX==='undefined'){ alert('กำลังโหลด SheetJS...'); return; }
+  const wb = XLSX.utils.book_new();
+  const today = new Date().toISOString().slice(0,10);
+
+  // Sheet 1: Tool Registry
+  const regHeaders=['#','Serial','ประเภท','รายการ Tool','แบรนด์','Status','ผู้ถือ/ผู้เบิก','แผนก','วันที่ซื้อ','ราคา/ชิ้น','หน่วย'];
+  const regRows=REGISTRY.map((r,i)=>[
+    i+1, r.hasSerial?r.serial:'N/A', r.type, r.name, r.brand||'',
+    r.status, r.holder||'', r.dept||'', r.buyDate||'', r.price||0, r.unit||'PCS'
+  ]);
+  const wsReg = XLSX.utils.aoa_to_sheet([regHeaders,...regRows]);
+  wsReg['!cols']=[{wch:4},{wch:22},{wch:12},{wch:35},{wch:12},{wch:12},{wch:14},{wch:10},{wch:12},{wch:10},{wch:8}];
+  XLSX.utils.book_append_sheet(wb, wsReg, 'Tool Registry');
+
+  // Sheet 2: Transaction ซื้อ
+  const buyHeaders=['TxnID','วันที่','ประเภท','รายการ Tool','แบรนด์','Serial','Qty','หน่วย','Supplier','ราคา/ชิ้น'];
+  const buyRows=TXNS.filter(t=>t.event==='buy').map(t=>[
+    t.id,t.date,t.type,t.name,t.brand||'',t.serial||'N/A',t.qty,t.unit||'PCS',t.supplier||'',t.price||0
+  ]);
+  const wsBuy = XLSX.utils.aoa_to_sheet([buyHeaders,...buyRows]);
+  wsBuy['!cols']=[{wch:12},{wch:12},{wch:12},{wch:35},{wch:12},{wch:22},{wch:6},{wch:8},{wch:25},{wch:10}];
+  XLSX.utils.book_append_sheet(wb, wsBuy, 'Transaction ซื้อ');
+
+  // Sheet 3: Transaction เบิก
+  const issHeaders=['TxnID','วันที่','ประเภท','รายการ Tool','Serial','Qty','แผนก','ผู้เบิก','ประเภทเบิก'];
+  const issRows=TXNS.filter(t=>t.event==='issue').map(t=>[
+    t.id,t.date,t.type,t.name,t.serial||'N/A',t.qty,t.dept||'',t.person||'',t.action||''
+  ]);
+  const wsIss = XLSX.utils.aoa_to_sheet([issHeaders,...issRows]);
+  wsIss['!cols']=[{wch:12},{wch:12},{wch:12},{wch:35},{wch:22},{wch:6},{wch:10},{wch:14},{wch:12}];
+  XLSX.utils.book_append_sheet(wb, wsIss, 'Transaction เบิก');
+
+  // Sheet 4: Transaction คืน
+  const retHeaders=['TxnID','วันที่','ประเภท','รายการ Tool','Serial','Qty','แผนก','ผู้คืน','สภาพ','หมายเหตุ'];
+  const retRows=TXNS.filter(t=>t.event==='return').map(t=>[
+    t.id,t.date,t.type,t.name,t.serial||'N/A',t.qty||1,t.dept||'',t.person||'',t.retStatus||'',t.note||''
+  ]);
+  const wsRet = XLSX.utils.aoa_to_sheet([retHeaders,...retRows]);
+  wsRet['!cols']=[{wch:12},{wch:12},{wch:12},{wch:35},{wch:22},{wch:6},{wch:10},{wch:14},{wch:12},{wch:20}];
+  XLSX.utils.book_append_sheet(wb, wsRet, 'Transaction คืน');
+
+  XLSX.writeFile(wb, `CTStock_Export_${today}.xlsx`);
+}
+
+// ═══════════════════════════════════════════
+//  INIT
+// ═══════════════════════════════════════════
+
+// ═══════════════════════════════════════════
+//  GOOGLE SHEETS SYNC + LOCAL STORAGE
+// ═══════════════════════════════════════════
+const LS_KEY = 'ctstock_v3';
+let GAS_URL = 'https://script.google.com/macros/s/AKfycbz6LRS-4iZ82y630n0JJCpjMaQmjisOXSJMqpJMcPlXu6Qma7TpxzYxCRAITftXK4SS/exec';
+try { GAS_URL = localStorage.getItem('ctstock_gas_url') || GAS_URL; } catch(e){}
+let saveTimer = null;
+
+function setGasUrl(url){
+  GAS_URL = url.trim();
+  try { localStorage.setItem('ctstock_gas_url', GAS_URL); } catch(e){}
+}
+
+function showSaveStatus(msg, color){
+  const el = document.getElementById('saveStatus');
+  if(!el) return;
+  el.textContent = msg;
+  el.style.color = color || 'var(--green)';
+  el.style.opacity = '1';
+  clearTimeout(el._t);
+  el._t = setTimeout(()=>{ el.style.opacity='0'; }, 3500);
+}
+
+// ── localStorage cache ──
+function saveLocal(){
+  try {
+    localStorage.setItem(LS_KEY, JSON.stringify({
+      savedAt: new Date().toISOString(),
+      REGISTRY, TXNS,
+      META: { BRAND_ABBR, TYPE_PREFIX }
+    }));
+  } catch(e){}
+}
+
+function loadLocal(){
+  try {
+    const raw = localStorage.getItem(LS_KEY);
+    if(!raw) return false;
+    const d = JSON.parse(raw);
+    if(d.REGISTRY && d.TXNS){
+      REGISTRY.length=0; d.REGISTRY.forEach(r=>REGISTRY.push(r));
+      TXNS.length=0;     d.TXNS.forEach(t=>TXNS.push(t));
+      if(d.META?.BRAND_ABBR) Object.assign(BRAND_ABBR, d.META.BRAND_ABBR);
+      if(d.META?.TYPE_PREFIX) Object.assign(TYPE_PREFIX, d.META.TYPE_PREFIX);
+      return d.savedAt;
+    }
+  } catch(e){}
+  return false;
+}
+
+// ── JSONP helper — ใช้แทน fetch เพื่อหลีกเลี่ยง CORS จาก file:// ──
+function jsonpCall(url, callback){
+  return new Promise((resolve, reject)=>{
+    const cbName = '_cb' + Date.now();
+    const script = document.createElement('script');
+    const timer = setTimeout(()=>{
+      cleanup(); reject(new Error('timeout'));
+    }, 15000);
+    function cleanup(){ delete window[cbName]; document.head.removeChild(script); clearTimeout(timer); }
+    window[cbName] = (data)=>{ cleanup(); resolve(data); };
+    script.src = url + (url.includes('?')?'&':'?') + 'callback=' + cbName;
+    script.onerror = ()=>{ cleanup(); reject(new Error('script load failed')); };
+    document.head.appendChild(script);
+  });
+}
+
+// ── Google Sheets load ──
+async function loadFromSheets(){
+  if(!GAS_URL) return false;
+  showSaveStatus('🔄 โหลดจาก Sheets...', 'var(--yellow)');
+  try {
+    const d = await jsonpCall(GAS_URL + '?action=load');
+    if(d.error) throw new Error(d.error);
+    if(!d.REGISTRY || d.REGISTRY.length === 0) return false;
+    REGISTRY.length=0;
+    d.REGISTRY.forEach(r=>{
+      if(typeof r.hasSerial==='string') r.hasSerial = r.hasSerial==='true'||r.hasSerial==='TRUE';
+      if(!Array.isArray(r.history)) r.history = r.history ? JSON.parse(r.history) : [];
+      REGISTRY.push(r);
+    });
+    TXNS.length=0;
+    d.TXNS.forEach(t=>{
+      if(typeof t.hasSerial==='string') t.hasSerial = t.hasSerial==='true'||t.hasSerial==='TRUE';
+      TXNS.push(t);
+    });
+    if(d.META){
+      if(d.META.BRAND_ABBR) Object.assign(BRAND_ABBR, d.META.BRAND_ABBR);
+      if(d.META.TYPE_PREFIX) Object.assign(TYPE_PREFIX, d.META.TYPE_PREFIX);
+    }
+    saveLocal();
+    showSaveStatus('☁️ ข้อมูลล่าสุดจาก Sheets', 'var(--green)');
+    updateSyncUI(true);
+    return true;
+  } catch(e){
+    showSaveStatus('⚠ Sheets: '+e.message, 'var(--red)');
+    return false;
+  }
+}
+
+// ── Google Sheets save — POST text/plain (no CORS preflight) ──
+async function saveToSheets(){
+  if(!GAS_URL) return;
+  showSaveStatus('🔄 บันทึก...', 'var(--yellow)');
+  try {
+    const payload = { REGISTRY, TXNS, META:{ BRAND_ABBR, TYPE_PREFIX } };
+    const res = await fetch(GAS_URL, {
+      method: 'POST',
+      body: JSON.stringify(payload)
+      // ไม่ใส่ Content-Type → browser ส่งเป็น text/plain → ไม่มี preflight CORS
+    });
+    const text = await res.text();
+    const d = JSON.parse(text);
+    if(d.error) throw new Error(d.error);
+    showSaveStatus('☁️ บันทึก Sheets แล้ว '+new Date().toLocaleTimeString('th'));
+  } catch(e){
+    showSaveStatus('⚠ บันทึกไม่ได้: '+e.message, 'var(--red)');
+  }
+}
+
+// ── scheduleSave: localStorage immediately + Sheets debounced ──
+function scheduleSave(){
+  saveLocal();
+  if(!GAS_URL){ showSaveStatus('💾 บันทึก (offline)', 'var(--muted)'); return; }
+  clearTimeout(saveTimer);
+  showSaveStatus('✏ รอบันทึก...', 'var(--yellow)');
+  saveTimer = setTimeout(()=>{ saveToSheets(); }, 1200);
+}
+
+// ── Manual sync now ──
+async function syncNow(){
+  const ok = await loadFromSheets();
+  if(ok){ renderDashboard(); renderRegistry(); updateBadges(); }
+}
+
+// ── Export JSON backup ──
+function exportBackup(){
+  const blob = new Blob([JSON.stringify({savedAt:new Date().toISOString(),REGISTRY,TXNS,META:{BRAND_ABBR,TYPE_PREFIX}},null,2)],{type:'application/json'});
+  const a=document.createElement('a'); a.href=URL.createObjectURL(blob);
+  a.download='ctstock_backup_'+new Date().toISOString().slice(0,10)+'.json'; a.click();
+}
+
+// ── Import JSON backup ──
+function importBackup(){
+  const inp=document.createElement('input'); inp.type='file'; inp.accept='.json';
+  inp.onchange=e=>{
+    const file=e.target.files[0]; if(!file) return;
+    const reader=new FileReader();
+    reader.onload=async ev=>{
+      try {
+        const d=JSON.parse(ev.target.result);
+        if(!d.REGISTRY||!d.TXNS) throw new Error('invalid file');
+        if(!confirm('นำเข้า Backup นี้?\n\nข้อมูลปัจจุบันจะถูกแทนที่ทั้งหมด')) return;
+        REGISTRY.length=0; d.REGISTRY.forEach(r=>REGISTRY.push(r));
+        TXNS.length=0;     d.TXNS.forEach(t=>TXNS.push(t));
+        if(d.META?.BRAND_ABBR) Object.assign(BRAND_ABBR, d.META.BRAND_ABBR);
+        updateBadges(); renderDashboard();
+        scheduleSave();
+        showSaveStatus('📂 Restore สำเร็จ');
+      } catch(e){ alert('ไฟล์ไม่ถูกต้อง: '+e.message); }
+    };
+    reader.readAsText(file);
+  };
+  inp.click();
+}
+
+// ── Sync modal ──
+function openSyncModal(){
+  document.getElementById('sync-url-input').value = GAS_URL;
+  updateSyncUI(!!GAS_URL);
+  openModal('sync');
+}
+
+async function saveSyncUrl(){
+  const url = document.getElementById('sync-url-input').value.trim();
+  if(!url){ showSaveStatus('⚠ กรุณาใส่ URL', 'var(--red)'); return; }
+  setGasUrl(url);
+  closeModal('sync');
+  updateSyncUI(true);
+
+  // ── ตรวจว่า Sheets ว่างอยู่ไหม ──
+  showSaveStatus('🔄 กำลังตรวจสอบ Sheets...', 'var(--yellow)');
+  try {
+    const d = await jsonpCall(GAS_URL + '?action=load');
+    const sheetsEmpty = !d.REGISTRY || d.REGISTRY.length === 0;
+    if(sheetsEmpty && REGISTRY.length > 0){
+      // Sheets ว่าง → push ข้อมูลปัจจุบันขึ้นไปเลยอัตโนมัติ
+      await saveToSheets();
+      showSaveStatus('☁️ Upload ' + REGISTRY.length + ' รายการขึ้น Sheets สำเร็จ', 'var(--green)');
+    } else {
+      // Sheets มีข้อมูลแล้ว → โหลดมาแทน
+      const ok = await loadFromSheets();
+      if(ok){ renderDashboard(); updateBadges(); }
+    }
+  } catch(e){
+    showSaveStatus('⚠ เชื่อมต่อไม่ได้: '+e.message, 'var(--red)');
+  }
+}
+
+function disconnectSheets(){
+  if(!confirm('ยกเลิกการเชื่อมต่อ Google Sheets?\n\nข้อมูลจะบันทึกแค่ใน browser เครื่องนี้')) return;
+  GAS_URL='';
+  try { localStorage.removeItem('ctstock_gas_url'); } catch(e){}
+  updateSyncUI(false);
+  closeModal('sync');
+  showSaveStatus('🔌 ยกเลิก Sheets แล้ว', 'var(--muted)');
+}
+
+function updateSyncUI(connected){
+  const btn = document.getElementById('syncBtn');
+  if(btn){
+    btn.textContent = connected ? '☁️ Synced' : '☁️ Sync';
+    btn.style.color = connected ? 'var(--green)' : '';
+    btn.style.borderColor = connected ? 'var(--green)' : '';
+  }
+}
+
+document.addEventListener('DOMContentLoaded', async ()=>{
+  // ข้อมูล seed จาก Excel อยู่ใน REGISTRY/TXNS แล้วตั้งแต่ต้น
+  // loadLocal() จะ override เฉพาะถ้ามีข้อมูลใน localStorage เท่านั้น
+  try { loadLocal(); } catch(e){}
+  renderDashboard(); updateBadges();
+
+  if(GAS_URL){
+    updateSyncUI(true);
+    try {
+      const ok = await loadFromSheets();
+      if(ok){ renderDashboard(); updateBadges(); }
+    } catch(e){}
+  } else {
+    showSaveStatus('☁️ กด 🔗 เชื่อมต่อ เพื่อใช้ Google Sheets', 'var(--muted)');
+  }
+});
+
+function toggleMobileMore(btn){
+  const more = document.getElementById('mobile-more');
+  const isOpen = more.style.display !== 'none';
+  if(isOpen){ closeMobileMore(); }
+  else {
+    more.style.display = 'block';
+    document.querySelectorAll('.mnav-btn').forEach(b=>b.classList.remove('active'));
+    btn.classList.add('active');
+  }
+}
+function closeMobileMore(){
+  document.getElementById('mobile-more').style.display = 'none';
+}
+// Close more menu when tapping outside
+document.addEventListener('click', function(e){
+  const more = document.getElementById('mobile-more');
+  const nav = document.getElementById('mobile-nav');
+  if(more && more.style.display !== 'none' && !more.contains(e.target) && !nav.contains(e.target)){
+    closeMobileMore();
+  }
+});
+</script>
+
+<!-- ===== MODAL: SETTINGS ===== -->
+<div class="mo" id="mo-settings">
+  <div class="modal" style="max-width:520px;">
+    <div class="mt">⚙ ตั้งค่า Serial Number</div>
+    <p style="font-size:11px;color:var(--muted);margin-bottom:12px;">
+      Format: <span class="mono" style="color:var(--accent);">TYPE-YY-ITEM-BRAND-####</span>
+      &nbsp;·&nbsp; เลขลำดับขึ้น 0001 ใหม่ทุกปี
+    </p>
+
+    <!-- Tabs -->
+    <div style="display:flex;gap:0;border-bottom:1px solid var(--border);margin-bottom:14px;">
+      <button id="stab-type" onclick="setSettingsTab('type')"
+        style="padding:7px 16px;border:none;font-family:inherit;font-size:12px;font-weight:600;cursor:pointer;background:transparent;color:var(--accent);border-bottom:2px solid var(--accent);">
+        🏷 TYPE Prefix
+      </button>
+      <button id="stab-brand" onclick="setSettingsTab('brand')"
+        style="padding:7px 16px;border:none;font-family:inherit;font-size:12px;font-weight:600;cursor:pointer;background:transparent;color:var(--muted);border-bottom:2px solid transparent;">
+        🏭 ตัวย่อแบรนด์
+      </button>
+    </div>
+
+    <!-- TYPE tab -->
+    <div id="stab-type-content">
+      <div style="font-size:10px;color:var(--muted);margin-bottom:8px;">ตัวย่อประเภท Tool ที่ใช้ใน Serial เช่น Endmill → EM</div>
+      <div id="settingsPrefixList" style="display:flex;flex-direction:column;gap:5px;max-height:340px;overflow-y:auto;"></div>
+    </div>
+
+    <!-- BRAND tab -->
+    <div id="stab-brand-content" style="display:none;">
+      <div style="font-size:10px;color:var(--muted);margin-bottom:8px;">ตัวย่อแบรนด์ที่ใช้ใน Serial เช่น KYOCERA → KYO, 7leader → 7L</div>
+      <div id="settingsBrandList" style="display:flex;flex-direction:column;gap:5px;max-height:300px;overflow-y:auto;"></div>
+      <!-- Add new brand row -->
+      <div style="display:flex;gap:8px;margin-top:10px;padding-top:10px;border-top:1px solid var(--border);">
+        <input class="fi" type="text" id="newBrandName" placeholder="ชื่อแบรนด์ใหม่" style="flex:2;">
+        <input class="fi" type="text" id="newBrandAbbr" placeholder="ตัวย่อ" style="flex:1;font-family:'JetBrains Mono',monospace;text-transform:uppercase;" oninput="this.value=this.value.toUpperCase()">
+        <button class="btn btn-green" onclick="addBrandAbbr()" style="white-space:nowrap;">+ เพิ่ม</button>
+      </div>
+    </div>
+
+    <div class="mf">
+      <button class="btn btn-outline" onclick="closeModal('settings')">ยกเลิก</button>
+      <button class="btn btn-primary" onclick="saveSettings()">✓ บันทึก</button>
+    </div>
+  </div>
+</div>
+
+
+<!-- ===== MODAL: SYNC ===== -->
+<div class="mo" id="mo-sync">
+  <div class="modal" style="max-width:500px;">
+    <div class="mt">☁️ เชื่อมต่อ Google Sheets</div>
+    <p style="font-size:11px;color:var(--muted);margin-bottom:16px;">ทุกคนที่เปิดไฟล์นี้จะบันทึกและดึงข้อมูลจาก Google Sheet เดียวกัน</p>
+
+    <div style="background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:12px;margin-bottom:14px;font-size:11px;line-height:1.8;">
+      <div style="font-weight:700;margin-bottom:6px;">📋 วิธีตั้งค่า (ทำครั้งแรกครั้งเดียว)</div>
+      <div>1. เปิด <a href="https://sheets.google.com" target="_blank" style="color:var(--accent);">Google Sheets</a> → สร้าง Spreadsheet ใหม่</div>
+      <div>2. เมนู <strong>Extensions → Apps Script</strong></div>
+      <div>3. วางโค้ดจากไฟล์ <span class="mono" style="color:var(--accent);">CTStock_GAS.gs</span> → กด Save</div>
+      <div>4. กด <strong>Deploy → New deployment → Web app</strong></div>
+      <div>5. Execute as: <strong>Me</strong> · Who has access: <strong>Anyone</strong></div>
+      <div>6. คัดลอก <strong>Web app URL</strong> มาวางด้านล่าง</div>
+    </div>
+
+    <div class="fg">
+      <label class="fl">Apps Script Web App URL</label>
+      <input class="fi" type="text" id="sync-url-input" placeholder="https://script.google.com/macros/s/.../exec" style="font-size:11px;">
+    </div>
+
+    <div id="sync-status-row" style="margin-top:10px;font-size:11px;"></div>
+
+    <div class="mf" style="flex-wrap:wrap;gap:8px;">
+      <button class="btn btn-outline" onclick="closeModal('sync')">ปิด</button>
+      <button class="btn btn-outline" style="color:var(--red);border-color:var(--red);" onclick="disconnectSheets()">🔌 ยกเลิก Sheets</button>
+      <button class="btn btn-primary" onclick="saveSyncUrl()">✓ เชื่อมต่อ & Sync</button>
+    </div>
+  </div>
+</div>
+
+</body>
+</html>
