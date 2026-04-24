@@ -3148,7 +3148,13 @@ async function loadFromSheets(){
   try {
     const d = await jsonpCall(GAS_URL + '?action=load');
     if(d.error) throw new Error(d.error);
-    if(!d.REGISTRY || d.REGISTRY.length === 0) return false;
+    // Sheet ว่าง → ล้าง local ด้วย ไม่ใช้ localStorage เก่า
+    if(!d.REGISTRY || d.REGISTRY.length === 0){
+      REGISTRY.length=0; TXNS.length=0;
+      saveLocal();
+      showSaveStatus('☁️ Sheets ว่าง — ล้างข้อมูล local แล้ว', 'var(--green)');
+      return true;
+    }
     REGISTRY.length=0;
     d.REGISTRY.forEach(r=>{
       if(typeof r.hasSerial==='string') r.hasSerial = r.hasSerial==='true'||r.hasSerial==='TRUE';
