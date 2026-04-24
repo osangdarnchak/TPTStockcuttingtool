@@ -235,6 +235,57 @@ tr.selected-row{background:rgba(239,68,68,.07);}
   transition:background .15s; width:100%;
 }
 .mnav-more-btn:hover, .mnav-more-btn:active { background:var(--surface2); }
+
+
+/* ── Detail Popup ── */
+.dp-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:600;align-items:center;justify-content:center;padding:16px;}
+.dp-overlay.open{display:flex;}
+.dp-box{background:var(--surface);border:1px solid var(--border);border-radius:16px;width:100%;max-width:520px;max-height:92vh;display:flex;flex-direction:column;box-shadow:0 8px 40px rgba(0,0,0,.3);}
+.dp-head{padding:14px 18px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:10px;flex-shrink:0;}
+.dp-nav-btn{background:var(--surface2);border:1px solid var(--border);border-radius:8px;width:30px;height:30px;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:13px;color:var(--text);transition:all .15s;}
+.dp-nav-btn:hover{background:var(--border);}
+.dp-nav-btn:disabled{opacity:.3;cursor:default;}
+.dp-title{flex:1;font-size:13px;font-weight:700;}
+.dp-counter{font-size:10px;color:var(--muted);white-space:nowrap;}
+.dp-body{overflow-y:auto;padding:18px;flex:1;}
+.dp-field{margin-bottom:14px;}
+.dp-label{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;margin-bottom:3px;}
+.dp-value{font-size:14px;color:var(--text);font-weight:500;}
+.dp-value.mono{font-family:monospace;color:var(--accent);}
+.dp-grid{display:grid;grid-template-columns:1fr 1fr;gap:0 16px;}
+.dp-img-wrap{margin-top:4px;}
+.dp-img-label{font-size:10px;color:var(--muted);margin-bottom:6px;}
+.dp-img-frame{background:var(--surface2);border:1px solid var(--border);border-radius:8px;overflow:hidden;min-height:60px;display:flex;align-items:center;justify-content:center;margin-bottom:10px;}
+.dp-img-frame img{max-width:100%;max-height:240px;object-fit:contain;cursor:zoom-in;}
+.dp-no-img{color:var(--muted);font-size:11px;padding:18px;}
+.dp-divider{border:none;border-top:1px solid var(--border);margin:14px 0;}
+.dp-foot{padding:12px 18px;border-top:1px solid var(--border);display:flex;gap:8px;justify-content:flex-end;flex-shrink:0;}
+/* edit mode */
+.dp-input{width:100%;background:var(--surface2);border:1px solid var(--border);border-radius:6px;padding:6px 9px;color:var(--text);font-size:13px;font-family:inherit;outline:none;transition:border .15s;}
+.dp-input:focus{border-color:var(--accent);}
+.dp-select{width:100%;background:var(--surface2);border:1px solid var(--border);border-radius:6px;padding:6px 9px;color:var(--text);font-size:13px;font-family:inherit;outline:none;}
+.dp-history-item{padding:8px 10px;border-radius:7px;background:var(--surface2);border:1px solid var(--border);margin-bottom:7px;font-size:12px;}
+.dp-history-item .dh-top{display:flex;gap:6px;align-items:center;margin-bottom:3px;}
+.dp-history-item .dh-detail{color:var(--muted);font-size:11px;}
+@media(max-width:600px){
+  .dp-box{max-width:100%;max-height:96vh;border-radius:16px 16px 0 0;margin-top:auto;}
+  .dp-overlay{align-items:flex-end;padding:0;}
+}
+
+/* Image viewer */
+.img-btn{display:inline-flex;align-items:center;justify-content:center;width:26px;height:26px;border-radius:5px;border:none;cursor:pointer;font-size:14px;transition:all .15s;}
+.img-btn-has{background:rgba(0,212,255,.15);color:var(--accent);}
+.img-btn-has:hover{background:rgba(0,212,255,.3);}
+.img-btn-none{background:var(--surface2);color:var(--muted);cursor:default;opacity:.4;}
+.img-viewer-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.85);z-index:500;align-items:center;justify-content:center;padding:16px;}
+.img-viewer-overlay.open{display:flex;}
+.img-viewer-box{background:var(--surface);border:1px solid var(--border);border-radius:14px;width:100%;max-width:560px;max-height:90vh;overflow-y:auto;}
+.img-viewer-head{padding:12px 16px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;}
+.img-viewer-body{padding:16px;display:flex;flex-direction:column;gap:14px;}
+.img-section-label{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;margin-bottom:6px;}
+.img-frame{background:var(--surface2);border:1px solid var(--border);border-radius:8px;overflow:hidden;text-align:center;min-height:80px;display:flex;align-items:center;justify-content:center;}
+.img-frame img{max-width:100%;max-height:320px;object-fit:contain;display:block;}
+.img-no-img{color:var(--muted);font-size:12px;padding:24px;}
 </style>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 </head>
@@ -533,7 +584,7 @@ tr.selected-row{background:rgba(239,68,68,.07);}
         <!-- SERIAL VIEW -->
         <div id="regSerialView">
           <div class="tw"><table>
-            <thead><tr><th><input type="checkbox" class="cb-sel" id="cb-all-reg" onchange="toggleSelAll('reg',this)"></th><th>#</th><th>รายการ Tool</th><th>ประเภท</th><th>Serial</th><th>แบรนด์</th><th>Status</th><th>ตำแหน่ง/ผู้ถือ</th><th>ซื้อเมื่อ</th></tr></thead>
+            <thead><tr><th><input type="checkbox" class="cb-sel" id="cb-all-reg" onchange="toggleSelAll('reg',this)"></th><th>#</th><th>รายการ Tool</th><th>ประเภท</th><th>Serial</th><th>แบรนด์</th><th>Status</th><th>ตำแหน่ง/ผู้ถือ</th><th>ซื้อเมื่อ</th><th>รูป</th></tr></thead>
             <tbody id="regBody"></tbody>
           </table></div>
         </div>
@@ -585,7 +636,7 @@ tr.selected-row{background:rgba(239,68,68,.07);}
       <div class="card">
         <div class="card-hd"><div class="card-title">🛒 Transaction นำเข้า / ซื้อ</div><span class="tag tb" id="buyCount">0 รายการ</span></div>
         <div class="tw"><table>
-          <thead><tr><th><input type="checkbox" class="cb-sel" id="cb-all-buy" onchange="toggleSelAll('buy',this)"></th><th>TxnID</th><th>วันที่</th><th>ประเภท</th><th>รายการ Tool</th><th>Serial</th><th>Qty</th><th>Supplier</th><th>ราคา/ชิ้น</th><th></th></tr></thead>
+          <thead><tr><th><input type="checkbox" class="cb-sel" id="cb-all-buy" onchange="toggleSelAll('buy',this)"></th><th>TxnID</th><th>วันที่</th><th>ประเภท</th><th>รายการ Tool</th><th>Serial</th><th>Qty</th><th>Supplier</th><th>ราคา/ชิ้น</th><th>รูป</th><th></th></tr></thead>
           <tbody id="buyBody"></tbody>
         </table></div>
       </div>
@@ -1534,8 +1585,9 @@ function renderRegistry(){
     return;
   }
 
-    document.getElementById('regBody').innerHTML=filtered.map((r,i)=>`<tr>
-    <td><input type="checkbox" class="cb-sel cb-reg" data-id="${r.id}" onchange="toggleSel('reg','${r.id}',this)" ${getSelSet('reg').has(r.id)?'checked':''}></td>
+    dpStore.registry=filtered;
+  document.getElementById('regBody').innerHTML=filtered.map((r,i)=>`<tr style="cursor:pointer;" onclick="openDetail('registry',${i})" onmouseenter="this.style.filter='brightness(1.06)'" onmouseleave="this.style.filter=''"
+    <td onclick="event.stopPropagation()"><input type="checkbox" class="cb-sel cb-reg" data-id="${r.id}" onchange="toggleSel('reg','${r.id}',this)" ${getSelSet('reg').has(r.id)?'checked':''}></td>
     <td class="mono" style="color:var(--muted);">${i+1}</td>
     <td style="max-width:200px;">${r.name}</td>
     <td><span class="tag ${tagCls(r.type)}">${r.type}</span></td>
@@ -1547,7 +1599,13 @@ function renderRegistry(){
     <td>${statusPill(r.status)}</td>
     <td style="font-size:11px;">${r.holder?`${r.holder} / ${r.dept||''}`:r.status==='stock'?'<span style="color:var(--muted);">คลัง</span>':'-'}</td>
     <td class="mono" style="color:var(--muted);">${r.buyDate||'-'}</td>
-
+    <td>${(()=>{
+      const t=TXNS.find(x=>x.id===r.buyTxnId);
+      const hasImg=!!(r.imageUrl||(t&&(t.receiptUrl||t.toolUrl)));
+      const receiptUrl=(t&&t.receiptUrl)||'';
+      const toolUrl=r.imageUrl||(t&&t.toolUrl)||'';
+      return imgBtn(hasImg, r.name, r.buyDate+' · '+(r.brand||''), receiptUrl, toolUrl);
+    })()}</td>
   </tr>`).join('');
 }
 
@@ -1566,8 +1624,9 @@ function renderBuy(){
   document.getElementById('buyWithSerial').textContent=buyTxns.filter(t=>t.hasSerial).length;
   document.getElementById('buyNoSerial').textContent=buyTxns.filter(t=>!t.hasSerial).length;
   document.getElementById('buyCount').textContent=filtered.length+' รายการ';
-  document.getElementById('buyBody').innerHTML=filtered.map(t=>`<tr>
-    <td><input type="checkbox" class="cb-sel cb-buy" data-id="${t.id}" onchange="toggleSel('buy','${t.id}',this)" ${getSelSet('buy').has(t.id)?'checked':''}></td>
+  dpStore.buy=filtered;
+  document.getElementById('buyBody').innerHTML=filtered.map((t,i)=>`<tr style="cursor:pointer;" onclick="openDetail('buy',${i})" onmouseenter="this.style.filter='brightness(1.06)'" onmouseleave="this.style.filter=''"
+    <td onclick="event.stopPropagation()"><input type="checkbox" class="cb-sel cb-buy" data-id="${t.id}" onchange="toggleSel('buy','${t.id}',this)" ${getSelSet('buy').has(t.id)?'checked':''}></td>
     <td class="mono" style="color:var(--accent);font-size:10px;">${t.id}</td>
     <td class="mono">${t.date}</td>
     <td><span class="tag ${tagCls(t.type)}">${t.type}</span></td>
@@ -1576,7 +1635,8 @@ function renderBuy(){
     <td class="mono">${t.qty}</td>
     <td>${t.supplier||'-'}</td>
     <td class="mono">${t.price>0?'฿'+t.price.toLocaleString('th'):'<span style="color:var(--muted)">-</span>'}</td>
-    <td><button class="ab" style="background:rgba(239,68,68,.12);color:var(--red);" onclick="deleteTxn('${t.id}')" title="ลบ">🗑</button></td>
+    <td>${imgBtn(!!(t.receiptUrl||t.toolUrl), t.name, t.date+' · '+( t.supplier||''), t.receiptUrl||'', t.toolUrl||'')}</td>
+    <td><button class="ab" style="background:rgba(239,68,68,.12);color:var(--red);" onclick="event.stopPropagation();deleteTxn('${t.id}')" title="ลบ">🗑</button></td>
   </tr>`).join('');
 }
 
@@ -1593,10 +1653,11 @@ function renderIssue(){
   document.getElementById('issueDeptR').textContent=issueTxns.filter(t=>t.dept==='Repeat').length;
   document.getElementById('issueDeptM').textContent=issueTxns.filter(t=>t.dept==='MC&CL').length;
   document.getElementById('issueCount').textContent=filtered.length+' รายการ';
-  document.getElementById('issueBody').innerHTML=filtered.map(t=>{
+  dpStore.issue=filtered;
+  document.getElementById('issueBody').innerHTML=filtered.map((t,i)=>{
     const reg=REGISTRY.find(r=>r.id===t.toolId);
-    return `<tr>
-    <td><input type="checkbox" class="cb-sel cb-issue" data-id="${t.id}" onchange="toggleSel('issue','${t.id}',this)" ${getSelSet('issue').has(t.id)?'checked':''}></td>
+    return `<tr style="cursor:pointer;" onclick="openDetail('issue',${i})" onmouseenter="this.style.filter='brightness(1.06)'" onmouseleave="this.style.filter=''">
+    <td onclick="event.stopPropagation()"><input type="checkbox" class="cb-sel cb-issue" data-id="${t.id}" onchange="toggleSel('issue','${t.id}',this)" ${getSelSet('issue').has(t.id)?'checked':''}></td>
     <td class="mono" style="color:var(--yellow);font-size:10px;">${t.id}</td>
     <td class="mono">${t.date}</td>
     <td><span class="tag ${tagCls(t.type)}">${t.type}</span></td>
@@ -1623,10 +1684,11 @@ function renderReturn(){
   document.getElementById('retOK').textContent=retTxns.filter(t=>t.retStatus==='used_ok').length;
   document.getElementById('retScrap').textContent=retTxns.filter(t=>t.retStatus==='scrapped').length;
   document.getElementById('retCount').textContent=filtered.length+' รายการ';
+  dpStore.return=filtered;
   document.getElementById('retBody').innerHTML=filtered.length===0
     ?'<tr><td colspan="10" style="text-align:center;padding:28px;color:var(--muted);">ยังไม่มีรายการคืน — กด "↩ บันทึกคืน Tool" เพื่อเริ่ม</td></tr>'
-    :filtered.map(t=>`<tr>
-    <td><input type="checkbox" class="cb-sel cb-ret" data-id="${t.id}" onchange="toggleSel('ret','${t.id}',this)" ${getSelSet('ret').has(t.id)?'checked':''}></td>
+    :filtered.map((t,i)=>`<tr style="cursor:pointer;" onclick="openDetail('return',${i})" onmouseenter="this.style.filter='brightness(1.06)'" onmouseleave="this.style.filter=''">
+    <td onclick="event.stopPropagation()"><input type="checkbox" class="cb-sel cb-ret" data-id="${t.id}" onchange="toggleSel('ret','${t.id}',this)" ${getSelSet('ret').has(t.id)?'checked':''}></td>
     <td class="mono" style="color:var(--orange);font-size:10px;">${t.id}</td>
     <td class="mono">${t.date}</td>
     <td><span class="tag ${tagCls(t.type)}">${t.type}</span></td>
@@ -1660,10 +1722,11 @@ function renderReissue(){
   document.getElementById('riAvail').textContent=avail;
   document.getElementById('riSaving').textContent='฿'+saving.toLocaleString('th');
   document.getElementById('riCount').textContent=filtered.length+' รายการ';
+  dpStore.reissue=filtered;
   document.getElementById('riBody').innerHTML=filtered.length===0
     ?'<tr><td colspan="9" style="text-align:center;padding:28px;color:var(--muted);">ยังไม่มีรายการเบิก Used Tool</td></tr>'
-    :filtered.map(t=>`<tr>
-    <td><input type="checkbox" class="cb-sel cb-ri" data-id="${t.id}" onchange="toggleSel('ri','${t.id}',this)" ${getSelSet('ri').has(t.id)?'checked':''}></td>
+    :filtered.map((t,i)=>`<tr style="cursor:pointer;" onclick="openDetail('reissue',${i})" onmouseenter="this.style.filter='brightness(1.06)'" onmouseleave="this.style.filter=''">
+    <td onclick="event.stopPropagation()"><input type="checkbox" class="cb-sel cb-ri" data-id="${t.id}" onchange="toggleSel('ri','${t.id}',this)" ${getSelSet('ri').has(t.id)?'checked':''}></td>
     <td class="mono" style="color:var(--green);font-size:10px;">${t.id}</td>
     <td class="mono">${t.date}</td>
     <td><span class="tag ${tagCls(t.type)}">${t.type}</span></td>
@@ -3245,6 +3308,396 @@ document.addEventListener('DOMContentLoaded', async ()=>{
   }
 });
 
+
+
+// ══════════════════════════════════════════
+//  DETAIL POPUP
+// ══════════════════════════════════════════
+let dpList = [];   // current filtered list
+let dpIdx  = 0;    // current index
+let dpMode = '';   // 'buy' | 'issue' | 'return' | 'reissue' | 'registry'
+let dpEdit = false;
+const dpStore = { buy:[], issue:[], return:[], reissue:[], registry:[] };
+
+function openDetail(mode, idx) {
+  dpMode = mode;
+  dpList = dpStore[mode] || [];
+  dpIdx  = idx;
+  dpEdit = false;
+  document.getElementById('dp-overlay').classList.add('open');
+  renderDetail();
+}
+
+function closeDetail() {
+  document.getElementById('dp-overlay').classList.remove('open');
+  dpEdit = false;
+}
+
+function dpNav(dir) {
+  dpIdx = Math.max(0, Math.min(dpList.length - 1, dpIdx + dir));
+  dpEdit = false;
+  renderDetail();
+}
+
+function renderDetail() {
+  const item = dpList[dpIdx];
+  if (!item) return;
+  const total = dpList.length;
+  document.getElementById('dp-counter').textContent = `${dpIdx + 1} / ${total}`;
+  document.getElementById('dp-prev').disabled = dpIdx === 0;
+  document.getElementById('dp-next').disabled = dpIdx === total - 1;
+
+  const body = document.getElementById('dp-body');
+  const foot = document.getElementById('dp-foot');
+
+  if (dpMode === 'buy')      { renderDetailBuy(item, body, foot); return; }
+  if (dpMode === 'issue')    { renderDetailIssue(item, body, foot); return; }
+  if (dpMode === 'return')   { renderDetailReturn(item, body, foot); return; }
+  if (dpMode === 'reissue')  { renderDetailReissue(item, body, foot); return; }
+  if (dpMode === 'registry') { renderDetailRegistry(item, body, foot); return; }
+}
+
+/* ── helpers ── */
+function dpField(label, value, mono=false) {
+  return `<div class="dp-field"><div class="dp-label">${label}</div><div class="dp-value${mono?' mono':''}">${value||'<span style="color:var(--muted)">-</span>'}</div></div>`;
+}
+function dpInput(label, key, value, type='text') {
+  return `<div class="dp-field"><div class="dp-label">${label}</div><input class="dp-input" type="${type}" data-key="${key}" value="${(value||'').toString().replace(/"/g,'&quot;')}"></div>`;
+}
+function dpSelect(label, key, value, options) {
+  const opts = options.map(o => `<option value="${o}" ${o===value?'selected':''}>${o}</option>`).join('');
+  return `<div class="dp-field"><div class="dp-label">${label}</div><select class="dp-select" data-key="${key}">${opts}</select></div>`;
+}
+function dpImgSection(receiptUrl, toolUrl) {
+  const rHtml = receiptUrl
+    ? `<img src="${receiptUrl}" onclick="window.open('${receiptUrl}','_blank')">`
+    : `<div class="dp-no-img">ไม่มีรูปใบส่งของ</div>`;
+  const tHtml = toolUrl
+    ? `<img src="${toolUrl}" onclick="window.open('${toolUrl}','_blank')">`
+    : `<div class="dp-no-img">ไม่มีรูป Tool</div>`;
+  return `
+    <hr class="dp-divider">
+    <div class="dp-img-wrap">
+      <div class="dp-img-label">📄 ใบส่งของ / ใบเสร็จ</div>
+      <div class="dp-img-frame">${rHtml}</div>
+      <div class="dp-img-label">🔧 รูป Tool ที่รับเข้า</div>
+      <div class="dp-img-frame">${tHtml}</div>
+    </div>`;
+}
+function dpSaveBtn(onclick) {
+  return `<button class="btn btn-primary" onclick="${onclick}">💾 บันทึก</button>`;
+}
+function dpEditBtn() {
+  return `<button class="btn" onclick="dpToggleEdit()">✏️ แก้ไข</button>`;
+}
+function dpToggleEdit() {
+  dpEdit = !dpEdit;
+  renderDetail();
+}
+function dpGetFormValues() {
+  const inputs = document.querySelectorAll('#dp-body [data-key]');
+  const result = {};
+  inputs.forEach(el => { result[el.dataset.key] = el.value; });
+  return result;
+}
+
+/* ── BUY detail ── */
+function renderDetailBuy(t, body, foot) {
+  document.getElementById('dp-title').textContent = '📥 รายละเอียดนำเข้า';
+  const tTitle = `[${t.type}] ${t.name}`;
+  if (!dpEdit) {
+    body.innerHTML = `
+      ${dpField('รายการ Tool', tTitle)}
+      <div class="dp-grid">
+        ${dpField('Serial Code', `<span class="mono" style="color:var(--accent)">${t.serial||'N/A (Lot)'}</span>`)}
+        ${dpField('ประเภท', `<span class="tag ${tagCls(t.type)}">${t.type}</span>`)}
+      </div>
+      <div class="dp-grid">
+        ${dpField('แบรนด์', t.brand)}
+        ${dpField('จำนวน', `<span class="mono">${t.qty}</span> ${t.unit||'PCS'}`)}
+      </div>
+      <div class="dp-grid">
+        ${dpField('วันที่นำเข้า', t.date)}
+        ${dpField('ราคา/ชิ้น', t.price>0?'฿'+t.price.toLocaleString('th'):null)}
+      </div>
+      ${dpField('ผู้จำหน่าย', t.supplier)}
+      ${dpField('หมายเหตุ', t.note)}
+      ${dpImgSection(t.receiptUrl||'', t.toolUrl||'')}`;
+    foot.innerHTML = dpEditBtn();
+  } else {
+    body.innerHTML = `
+      ${dpField('รายการ Tool', tTitle)}
+      ${dpField('Serial Code', `<span class="mono" style="color:var(--accent)">${t.serial||'N/A'}</span>`)}
+      <div class="dp-grid">
+        ${dpInput('วันที่', 'date', t.date, 'date')}
+        ${dpInput('ราคา/ชิ้น (฿)', 'price', t.price, 'number')}
+      </div>
+      ${dpInput('ผู้จำหน่าย', 'supplier', t.supplier)}
+      ${dpInput('หมายเหตุ', 'note', t.note)}
+      ${dpImgSection(t.receiptUrl||'', t.toolUrl||'')}`;
+    foot.innerHTML = `<button class="btn" onclick="dpToggleEdit()">ยกเลิก</button>${dpSaveBtn('dpSaveBuy()')}`;
+  }
+}
+function dpSaveBuy() {
+  const vals = dpGetFormValues();
+  const t = dpList[dpIdx];
+  const txIdx = TXNS.findIndex(x => x.id === t.id);
+  if (txIdx < 0) return;
+  TXNS[txIdx] = { ...TXNS[txIdx], date: vals.date, price: parseFloat(vals.price)||0, supplier: vals.supplier, note: vals.note };
+  dpList[dpIdx] = TXNS[txIdx];
+  scheduleSave(); renderBuy();
+  dpEdit = false; renderDetail();
+}
+
+/* ── ISSUE detail ── */
+function renderDetailIssue(t, body, foot) {
+  document.getElementById('dp-title').textContent = '📤 รายละเอียดเบิก';
+  const tTitle = `[${t.type}] ${t.name}`;
+  const depts = ['Repeat','MC&CL','ฝ่ายซ่อมบำรุง','QC','อื่นๆ'];
+  const actions = ['เปลี่ยน','เบิกเพิ่ม'];
+  if (!dpEdit) {
+    body.innerHTML = `
+      ${dpField('รายการ Tool', tTitle)}
+      <div class="dp-grid">
+        ${dpField('Serial Code', `<span class="mono" style="color:var(--accent)">${t.serial||'N/A'}</span>`)}
+        ${dpField('TxnID', `<span class="mono" style="font-size:11px">${t.id}</span>`)}
+      </div>
+      <div class="dp-grid">
+        ${dpField('วันที่เบิก', t.date)}
+        ${dpField('จำนวน', `<span class="mono">${t.qty}</span>`)}
+      </div>
+      <div class="dp-grid">
+        ${dpField('แผนก', t.dept)}
+        ${dpField('ผู้เบิก', t.person)}
+      </div>
+      <div class="dp-grid">
+        ${dpField('Job / งาน', t.job)}
+        ${dpField('ประเภทการเบิก', `<span class="tag ${t.action==='เปลี่ยน'?'tb':'ty'}">${t.action}</span>`)}
+      </div>
+      ${dpField('หมายเหตุ', t.note)}`;
+    foot.innerHTML = dpEditBtn();
+  } else {
+    body.innerHTML = `
+      ${dpField('รายการ Tool', tTitle)}
+      ${dpField('Serial Code', `<span class="mono" style="color:var(--accent)">${t.serial||'N/A'}</span>`)}
+      <div class="dp-grid">
+        ${dpInput('วันที่', 'date', t.date, 'date')}
+        ${dpSelect('แผนก', 'dept', t.dept, depts)}
+      </div>
+      <div class="dp-grid">
+        ${dpInput('ผู้เบิก', 'person', t.person)}
+        ${dpSelect('ประเภทการเบิก', 'action', t.action, actions)}
+      </div>
+      ${dpInput('Job / งาน', 'job', t.job)}
+      ${dpInput('หมายเหตุ', 'note', t.note)}`;
+    foot.innerHTML = `<button class="btn" onclick="dpToggleEdit()">ยกเลิก</button>${dpSaveBtn('dpSaveIssue()')}`;
+  }
+}
+function dpSaveIssue() {
+  const vals = dpGetFormValues();
+  const t = dpList[dpIdx];
+  const txIdx = TXNS.findIndex(x => x.id === t.id);
+  if (txIdx < 0) return;
+  TXNS[txIdx] = { ...TXNS[txIdx], date: vals.date, dept: vals.dept, person: vals.person, action: vals.action, job: vals.job, note: vals.note };
+  dpList[dpIdx] = TXNS[txIdx];
+  scheduleSave(); renderIssue();
+  dpEdit = false; renderDetail();
+}
+
+/* ── RETURN detail ── */
+function renderDetailReturn(t, body, foot) {
+  document.getElementById('dp-title').textContent = '↩ รายละเอียดคืน';
+  const tTitle = `[${t.type}] ${t.name}`;
+  const statusOpts = ['used_inspect','used_ok','scrapped'];
+  const statusLabel = {'used_inspect':'รอ Inspect','used_ok':'ผ่าน Inspect','scrapped':'Scrapped'};
+  if (!dpEdit) {
+    body.innerHTML = `
+      ${dpField('รายการ Tool', tTitle)}
+      <div class="dp-grid">
+        ${dpField('Serial Code', `<span class="mono" style="color:var(--accent)">${t.serial||'N/A'}</span>`)}
+        ${dpField('TxnID', `<span class="mono" style="font-size:11px">${t.id}</span>`)}
+      </div>
+      <div class="dp-grid">
+        ${dpField('วันที่คืน', t.date)}
+        ${dpField('แผนก', t.dept||'-')}
+      </div>
+      <div class="dp-grid">
+        ${dpField('ผู้คืน', t.person)}
+        ${dpField('สถานะ', statusPill(t.retStatus||t.status||'used_inspect'))}
+      </div>
+      ${dpField('หมายเหตุ', t.note)}`;
+    foot.innerHTML = dpEditBtn();
+  } else {
+    body.innerHTML = `
+      ${dpField('รายการ Tool', tTitle)}
+      ${dpField('Serial Code', `<span class="mono" style="color:var(--accent)">${t.serial||'N/A'}</span>`)}
+      <div class="dp-grid">
+        ${dpInput('วันที่คืน', 'date', t.date, 'date')}
+        ${dpSelect('สถานะ', 'retStatus', t.retStatus||t.status||'used_inspect', statusOpts.map(s=>s), )}
+      </div>
+      ${dpInput('ผู้คืน', 'person', t.person)}
+      ${dpInput('หมายเหตุ', 'note', t.note)}`;
+    foot.innerHTML = `<button class="btn" onclick="dpToggleEdit()">ยกเลิก</button>${dpSaveBtn('dpSaveReturn()')}`;
+  }
+}
+function dpSaveReturn() {
+  const vals = dpGetFormValues();
+  const t = dpList[dpIdx];
+  const txIdx = TXNS.findIndex(x => x.id === t.id);
+  if (txIdx < 0) return;
+  TXNS[txIdx] = { ...TXNS[txIdx], date: vals.date, retStatus: vals.retStatus, person: vals.person, note: vals.note };
+  dpList[dpIdx] = TXNS[txIdx];
+  // sync registry status
+  const regItem = REGISTRY.find(r => r.serial === t.serial);
+  if (regItem) regItem.status = vals.retStatus;
+  scheduleSave(); renderReturn();
+  dpEdit = false; renderDetail();
+}
+
+/* ── REISSUE detail ── */
+function renderDetailReissue(t, body, foot) {
+  document.getElementById('dp-title').textContent = '♻ รายละเอียดเบิก Used Tool';
+  const tTitle = `[${t.type}] ${t.name}`;
+  const depts = ['Repeat','MC&CL','ฝ่ายซ่อมบำรุง','QC','อื่นๆ'];
+  if (!dpEdit) {
+    body.innerHTML = `
+      ${dpField('รายการ Tool', tTitle)}
+      <div class="dp-grid">
+        ${dpField('Serial Code', `<span class="mono" style="color:var(--accent)">${t.serial||'N/A'}</span>`)}
+        ${dpField('TxnID', `<span class="mono" style="font-size:11px">${t.id}</span>`)}
+      </div>
+      <div class="dp-grid">
+        ${dpField('วันที่เบิก', t.date)}
+        ${dpField('จำนวน', `<span class="mono">${t.qty}</span>`)}
+      </div>
+      <div class="dp-grid">
+        ${dpField('แผนก', t.dept)}
+        ${dpField('ผู้เบิก', t.person)}
+      </div>
+      ${dpField('ประหยัดได้', t.saving>0?'฿'+t.saving.toLocaleString('th'):'-')}
+      ${dpField('หมายเหตุ', t.note)}`;
+    foot.innerHTML = dpEditBtn();
+  } else {
+    body.innerHTML = `
+      ${dpField('รายการ Tool', tTitle)}
+      ${dpField('Serial Code', `<span class="mono" style="color:var(--accent)">${t.serial||'N/A'}</span>`)}
+      <div class="dp-grid">
+        ${dpInput('วันที่', 'date', t.date, 'date')}
+        ${dpSelect('แผนก', 'dept', t.dept, depts)}
+      </div>
+      ${dpInput('ผู้เบิก', 'person', t.person)}
+      ${dpInput('หมายเหตุ', 'note', t.note)}`;
+    foot.innerHTML = `<button class="btn" onclick="dpToggleEdit()">ยกเลิก</button>${dpSaveBtn('dpSaveReissue()')}`;
+  }
+}
+function dpSaveReissue() {
+  const vals = dpGetFormValues();
+  const t = dpList[dpIdx];
+  const txIdx = TXNS.findIndex(x => x.id === t.id);
+  if (txIdx < 0) return;
+  TXNS[txIdx] = { ...TXNS[txIdx], date: vals.date, dept: vals.dept, person: vals.person, note: vals.note };
+  dpList[dpIdx] = TXNS[txIdx];
+  scheduleSave(); renderReissue();
+  dpEdit = false; renderDetail();
+}
+
+/* ── REGISTRY detail ── */
+function renderDetailRegistry(r, body, foot) {
+  document.getElementById('dp-title').textContent = '🗂 รายละเอียด Tool';
+  const txn = TXNS.find(t => t.id === r.buyTxnId);
+  const history = TXNS.filter(t => t.serial === r.serial || t.toolId === r.id).sort((a,b)=>(b.date||'').localeCompare(a.date||''));
+  const evLabel = {buy:'นำเข้า',issue:'เบิก',return:'คืน',reissue:'เบิก Used'};
+  const evColor = {buy:'var(--accent)',issue:'var(--yellow)',return:'var(--orange)',reissue:'var(--green)'};
+  if (!dpEdit) {
+    const histHtml = history.length === 0
+      ? '<div style="color:var(--muted);font-size:12px;padding:8px 0;">ยังไม่มีประวัติ</div>'
+      : history.map(h => `
+        <div class="dp-history-item">
+          <div class="dh-top">
+            <span class="tag" style="background:${evColor[h.event]||'var(--muted)'};color:#000;font-size:9px;">${evLabel[h.event]||h.event}</span>
+            <span class="mono" style="font-size:11px;">${h.date}</span>
+          </div>
+          <div class="dh-detail">${h.dept||''} ${h.person?'· '+h.person:''} ${h.note?'· '+h.note:''}</div>
+        </div>`).join('');
+    body.innerHTML = `
+      ${dpField('รายการ Tool', r.name)}
+      <div class="dp-grid">
+        ${dpField('ประเภท', `<span class="tag ${tagCls(r.type)}">${r.type}</span>`)}
+        ${dpField('แบรนด์', r.brand)}
+      </div>
+      <div class="dp-grid">
+        ${dpField('Serial Code', `<span class="mono" style="color:var(--accent)">${r.serial||'N/A'}</span>`)}
+        ${dpField('สถานะ', statusPill(r.status))}
+      </div>
+      <div class="dp-grid">
+        ${dpField('ตำแหน่ง / ผู้ถือ', r.holder ? r.holder+(r.dept?' / '+r.dept:'') : 'คลัง')}
+        ${dpField('วันที่นำเข้า', r.buyDate)}
+      </div>
+      ${dpField('หมายเหตุ', r.note)}
+      ${txn ? dpImgSection(txn.receiptUrl||r.imageUrl||'', txn.toolUrl||r.imageUrl||'') : ''}
+      <hr class="dp-divider">
+      <div class="dp-label" style="margin-bottom:8px;">📋 ประวัติการเคลื่อนไหว</div>
+      ${histHtml}`;
+    foot.innerHTML = dpEditBtn();
+  } else {
+    body.innerHTML = `
+      ${dpField('รายการ Tool', r.name)}
+      ${dpField('Serial Code', `<span class="mono" style="color:var(--accent)">${r.serial||'N/A'}</span>`)}
+      <div class="dp-grid">
+        ${dpInput('แบรนด์', 'brand', r.brand)}
+        ${dpInput('ตำแหน่ง / ผู้ถือ', 'holder', r.holder)}
+      </div>
+      ${dpInput('หมายเหตุ', 'note', r.note)}`;
+    foot.innerHTML = `<button class="btn" onclick="dpToggleEdit()">ยกเลิก</button>${dpSaveBtn('dpSaveRegistry()')}`;
+  }
+}
+function dpSaveRegistry() {
+  const vals = dpGetFormValues();
+  const r = dpList[dpIdx];
+  const rIdx = REGISTRY.findIndex(x => x.id === r.id);
+  if (rIdx < 0) return;
+  REGISTRY[rIdx] = { ...REGISTRY[rIdx], brand: vals.brand, holder: vals.holder, note: vals.note };
+  dpList[dpIdx] = REGISTRY[rIdx];
+  scheduleSave(); renderRegistry();
+  dpEdit = false; renderDetail();
+}
+
+// ── IMAGE VIEWER ──
+function openImgViewer(title, sub, receiptUrl, toolUrl) {
+  document.getElementById('iv-title').textContent = title || 'ดูรูปประกอบ';
+  document.getElementById('iv-sub').textContent = sub || '';
+
+  const rf = document.getElementById('iv-receipt-frame');
+  const tf = document.getElementById('iv-tool-frame');
+
+  rf.innerHTML = receiptUrl
+    ? `<img src="${receiptUrl}" alt="ใบส่งของ" onclick="window.open('${receiptUrl}','_blank')" style="cursor:zoom-in;">`
+    : '<div class="img-no-img">ไม่มีรูปใบส่งของ</div>';
+
+  tf.innerHTML = toolUrl
+    ? `<img src="${toolUrl}" alt="Tool" onclick="window.open('${toolUrl}','_blank')" style="cursor:zoom-in;">`
+    : '<div class="img-no-img">ไม่มีรูป Tool</div>';
+
+  document.getElementById('iv-receipt-wrap').style.display = '';
+  document.getElementById('iv-tool-wrap').style.display = '';
+  document.getElementById('img-viewer-overlay').classList.add('open');
+}
+
+function closeImgViewer() {
+  document.getElementById('img-viewer-overlay').classList.remove('open');
+}
+
+function imgBtn(hasImg, title, sub, receiptUrl, toolUrl) {
+  if (hasImg) {
+    const safeTitle = (title||'').replace(/'/g,"\'").replace(/"/g,'&quot;');
+    const safeSub   = (sub||'').replace(/'/g,"\'").replace(/"/g,'&quot;');
+    const safeR = (receiptUrl||'').replace(/'/g,"\'");
+    const safeT = (toolUrl||'').replace(/'/g,"\'");
+    return `<button class="img-btn img-btn-has" onclick="openImgViewer('${safeTitle}','${safeSub}','${safeR}','${safeT}')" title="ดูรูปประกอบ">🖼</button>`;
+  }
+  return `<button class="img-btn img-btn-none" title="ไม่มีรูป" disabled>🖼</button>`;
+}
+
 function toggleMobileMore(btn){
   const more = document.getElementById('mobile-more');
   const isOpen = more.style.display !== 'none';
@@ -3342,6 +3795,46 @@ document.addEventListener('click', function(e){
       <button class="btn btn-outline" onclick="closeModal('sync')">ปิด</button>
       <button class="btn btn-outline" style="color:var(--red);border-color:var(--red);" onclick="disconnectSheets()">🔌 ยกเลิก Sheets</button>
       <button class="btn btn-primary" onclick="saveSyncUrl()">✓ เชื่อมต่อ & Sync</button>
+    </div>
+  </div>
+</div>
+
+
+
+<!-- DETAIL POPUP -->
+<div class="dp-overlay" id="dp-overlay" onclick="if(event.target===this)closeDetail()">
+  <div class="dp-box">
+    <div class="dp-head">
+      <button class="dp-nav-btn" id="dp-prev" onclick="dpNav(-1)" title="ก่อนหน้า">&#8249;</button>
+      <button class="dp-nav-btn" id="dp-next" onclick="dpNav(1)" title="ถัดไป">&#8250;</button>
+      <div class="dp-title" id="dp-title">รายละเอียด</div>
+      <span class="dp-counter" id="dp-counter"></span>
+      <button onclick="closeDetail()" style="background:none;border:none;color:var(--muted);font-size:20px;cursor:pointer;line-height:1;margin-left:4px;">✕</button>
+    </div>
+    <div class="dp-body" id="dp-body"></div>
+    <div class="dp-foot" id="dp-foot"></div>
+  </div>
+</div>
+
+<!-- IMAGE VIEWER MODAL -->
+<div class="img-viewer-overlay" id="img-viewer-overlay" onclick="if(event.target===this)closeImgViewer()">
+  <div class="img-viewer-box">
+    <div class="img-viewer-head">
+      <div>
+        <div style="font-size:13px;font-weight:700;" id="iv-title">ดูรูปประกอบ</div>
+        <div style="font-size:10px;color:var(--muted);margin-top:2px;" id="iv-sub"></div>
+      </div>
+      <button onclick="closeImgViewer()" style="background:none;border:none;color:var(--muted);font-size:18px;cursor:pointer;">✕</button>
+    </div>
+    <div class="img-viewer-body">
+      <div id="iv-receipt-wrap">
+        <div class="img-section-label">📄 ใบส่งของ / ใบเสร็จ</div>
+        <div class="img-frame" id="iv-receipt-frame"></div>
+      </div>
+      <div id="iv-tool-wrap">
+        <div class="img-section-label">🔧 รูป Tool จริงที่รับเข้า</div>
+        <div class="img-frame" id="iv-tool-frame"></div>
+      </div>
     </div>
   </div>
 </div>
