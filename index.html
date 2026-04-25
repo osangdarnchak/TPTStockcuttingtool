@@ -600,7 +600,7 @@ tr.selected-row{background:rgba(239,68,68,.07);}
               <th>#</th>
               <th>ประเภท</th>
               <th>รายการ</th>
-              <th style="text-align:right;">ราคามาตรฐาน</th>
+              <th style="text-align:right;">ราคา</th>
               <th style="text-align:center;">หน่วยนับ</th>
               <th style="text-align:center;color:var(--accent);">จำนวนสินค้าคงเหลือ</th>
               <th style="text-align:right;color:var(--green);">มูลค่าคงเหลือ</th>
@@ -1769,19 +1769,40 @@ function populateDesktopComboboxes(){
 function openModal(name){
   if(name==='buy'){
     buySerials=[];
+    // ── Reset ทุก field ให้เป็นค่าว่าง ──
     document.getElementById('b-date').value=today();
+    document.getElementById('b-name').value='';
+    document.getElementById('b-brand').value='';
+    document.getElementById('b-supplier').value='';
+    document.getElementById('b-type').value=document.getElementById('b-type').options[0]?.value||'';
+    document.getElementById('b-price').value='0';
+    document.getElementById('b-price').style.background='';
+    const hintEl=document.getElementById('b-price-hint'); if(hintEl) hintEl.textContent='';
     const inp=document.getElementById('b-serialInput'); if(inp) inp.value='';
     document.getElementById('b-itemCode').value='';
     document.getElementById('b-brandCode').value='';
-    document.getElementById('b-brand').oninput=()=>{ document.getElementById('b-brandCode').value=''; previewSerials(); };
     document.getElementById('b-autoQty').value='1';
+    const noteEl=document.getElementById('b-note'); if(noteEl) noteEl.value='';
+    // ── Bind handlers ──
+    document.getElementById('b-brand').oninput=()=>{ document.getElementById('b-brandCode').value=''; previewSerials(); };
     document.getElementById('b-name').oninput=()=>{ document.getElementById('b-itemCode').value=''; previewSerials(); };
     document.getElementById('b-type').onchange=previewSerials;
     renderBuySerials();
     setBuySerialMode('auto');
     setTimeout(previewSerials, 50);
   }
-  if(name==='issue'){selectedRegId=null;issSelected.clear();document.getElementById('iss-date').value=today();renderIssueStockList();renderIssueBasket();const t=document.getElementById('iss-typeFilter');if(t&&t.options.length<=1){[...new Set(REGISTRY.filter(r=>r.status==='stock').map(r=>r.type))].sort().forEach(tp=>{const o=document.createElement('option');o.value=tp;o.textContent=tp;t.appendChild(o);});}document.getElementById('issueSelectedInfo').style.display='none';populateDesktopComboboxes();}
+  if(name==='issue'){
+    selectedRegId=null; issSelected.clear();
+    document.getElementById('iss-date').value=today();
+    // Reset fields
+    const issDept=document.getElementById('iss-dept'); if(issDept) issDept.value='';
+    const issPerson=document.getElementById('iss-person'); if(issPerson) issPerson.value='';
+    const issJob=document.getElementById('iss-job'); if(issJob) issJob.value='';
+    const issAction=document.getElementById('iss-action'); if(issAction) issAction.value=issAction.options[0]?.value||'';
+    const issNote=document.getElementById('iss-note'); if(issNote) issNote.value='';
+    const issSearch=document.getElementById('iss-search'); if(issSearch) issSearch.value='';
+    const issTypeFilter=document.getElementById('iss-typeFilter'); if(issTypeFilter) issTypeFilter.value='';
+    renderIssueStockList(); renderIssueBasket();const t=document.getElementById('iss-typeFilter');if(t&&t.options.length<=1){[...new Set(REGISTRY.filter(r=>r.status==='stock').map(r=>r.type))].sort().forEach(tp=>{const o=document.createElement('option');o.value=tp;o.textContent=tp;t.appendChild(o);});}document.getElementById('issueSelectedInfo').style.display='none';populateDesktopComboboxes();}
   if(name==='return'){retCurrentMode='issue';retSelectedTxnId=null;retSelectedSerials=new Set();document.getElementById('ret-date').value=today();setRetMode('issue');populateDesktopComboboxes();}
   if(name==='reissue'){selectedRegId=null;document.getElementById('ri-date').value=today();renderRiStockList();populateDesktopComboboxes();}
   if(name==='settings') openSettingsModal();
@@ -2500,21 +2521,20 @@ function acPick(field, val){
         if(typeEl) typeEl.value=match.type;
       }
       // Auto-fill standard price from registry
-      if(match.stdPrice>0){
-        const priceEl=document.getElementById('b-price');
-        const hintEl=document.getElementById('b-price-hint');
-        if(priceEl){
-          priceEl.value=match.stdPrice;
-          priceEl.style.background='rgba(0,212,255,.08)';
-          priceEl.title='ราคามาตรฐานจาก Registry — แก้ได้ถ้าราคาจริงต่างออกไป';
-        }
-        if(hintEl) hintEl.textContent='(มาตรฐาน ฿'+match.stdPrice.toLocaleString('th-TH')+')';
-      } else {
-        const priceEl=document.getElementById('b-price');
-        const hintEl=document.getElementById('b-price-hint');
-        if(priceEl){ priceEl.style.background=''; }
-        if(hintEl) hintEl.textContent='';
+      // ดึงราคาล่าสุดจาก TXNS buy ของ tool ชื่อเดียวกัน
+      const lastBuyTxn = TXNS.filter(x=>x.event==='buy'&&x.name===val&&x.price>0)
+        .sort((a,b)=>(b.date||'').localeCompare(a.date||'')).shift();
+      const lastPrice = lastBuyTxn?.price || match.stdPrice || 0;
+      const priceEl=document.getElementById('b-price');
+      const hintEl=document.getElementById('b-price-hint');
+      if(priceEl && lastPrice>0){
+        priceEl.value=lastPrice;
+        priceEl.style.background='rgba(0,212,255,.08)';
+        priceEl.title='ราคาล่าสุดที่ซื้อ — แก้ได้ถ้าราคาครั้งนี้ต่างออกไป';
+      } else if(priceEl){
+        priceEl.style.background='';
       }
+      if(hintEl) hintEl.textContent=lastPrice>0?('ราคาล่าสุด ฿'+lastPrice.toLocaleString('th-TH')):'';
     }
     document.getElementById('b-itemCode').value='';
     document.getElementById('b-brandCode').value='';
