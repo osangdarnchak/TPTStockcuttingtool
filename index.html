@@ -600,10 +600,11 @@ tr.selected-row{background:rgba(239,68,68,.07);}
               <th>#</th>
               <th>ประเภท</th>
               <th>รายการ</th>
-              <th style="text-align:right;">ราคาต่อหน่วย</th>
+              <th style="text-align:right;">ราคามาตรฐาน</th>
+              <th style="text-align:right;">ราคาล่าสุด</th>
               <th style="text-align:center;">หน่วยนับ</th>
               <th style="text-align:center;color:var(--accent);">จำนวนสินค้าคงเหลือ</th>
-              <th style="text-align:right;color:var(--green);">มูลค่าสินค้าคงเหลือ</th>
+              <th style="text-align:right;color:var(--green);">มูลค่าคงเหลือ</th>
             </tr></thead>
             <tbody id="regGroupBody"></tbody>
             <tfoot id="regGroupFoot"></tfoot>
@@ -866,7 +867,11 @@ tr.selected-row{background:rgba(239,68,68,.07);}
       </div>
     </div>
     <div class="fr" style="margin-top:6px;">
-      <div class="fg"><label class="fl">ราคาต่อชิ้น (฿)</label><input class="fi" type="number" id="b-price" value="0" min="0"></div>
+      <div class="fg">
+        <label class="fl">ราคาต่อชิ้น (฿) <span id="b-price-hint" style="font-size:9px;color:var(--accent);margin-left:4px;"></span></label>
+        <input class="fi" type="number" id="b-price" value="0" min="0"
+          oninput="document.getElementById('b-price-hint').textContent='(แก้แล้ว)';this.style.background='';">
+      </div>
       <div class="fg"><label class="fl">หมายเหตุ</label><input class="fi" type="text" id="b-note" placeholder="ไม่บังคับ"></div>
     </div>
     <!-- รูปภาพ -->
@@ -1527,10 +1532,11 @@ function renderRegistry(){
       const key=r.type+'||'+r.name;
       if(!groups[key]) groups[key]={
         type:r.type, name:r.name, brand:r.brand||'',
-        price:r.price||0, unit:r.unit||'PCS', stock:0
+        price:r.price||0, stdPrice:r.stdPrice||0, unit:r.unit||'PCS', stock:0
       };
       const g=groups[key];
-      if((r.price||0)>g.price) g.price=r.price; // ใช้ราคาสูงสุดในกลุ่ม
+      if((r.price||0)>g.price) g.price=r.price; // ราคาล่าสุดสูงสุดในกลุ่ม
+      if((r.stdPrice||0)>g.stdPrice) g.stdPrice=r.stdPrice; // ราคามาตรฐานสูงสุด
       if(r.unit&&r.unit!=='PCS') g.unit=r.unit;
       if(r.status==='stock') g.stock++;
     });
@@ -1545,11 +1551,11 @@ function renderRegistry(){
 
     const fmt=(n)=>n.toLocaleString('th-TH',{minimumFractionDigits:2,maximumFractionDigits:2});
     const totalQty=gRows.reduce((s,g)=>s+g.stock,0);
-    const totalVal=gRows.reduce((s,g)=>s+(g.stock*g.price),0);
+    const totalVal=gRows.reduce((s,g)=>s+(g.stock*(g.price||g.stdPrice||0)),0);
 
     document.getElementById('regCount').textContent=gRows.length+' รายการ';
     document.getElementById('regGroupBody').innerHTML=gRows.map((g,i)=>{
-      const val=g.stock*g.price;
+      const val=g.stock*(g.price||g.stdPrice||0);
       const qc=g.stock===0?'var(--red)':g.stock<=2?'var(--yellow)':'var(--accent)';
       const qb=g.stock===0?'rgba(239,68,68,.08)':g.stock<=2?'rgba(245,158,11,.08)':'transparent';
       return `<tr>
@@ -1558,6 +1564,9 @@ function renderRegistry(){
         <td>
           <div style="font-weight:600;font-size:12px;">${g.name}</div>
           ${g.brand?`<div style="color:var(--muted);font-size:10px;">${g.brand}</div>`:''}
+        </td>
+        <td style="text-align:right;">
+          ${g.stdPrice>0?`<span class="mono" style="color:var(--accent);">฿${fmt(g.stdPrice)}</span>`:`<span style="color:var(--muted);">—</span>`}
         </td>
         <td style="text-align:right;">
           ${g.price>0?`<span class="mono">฿${fmt(g.price)}</span>`:`<span style="color:var(--muted);">—</span>`}
@@ -1575,7 +1584,7 @@ function renderRegistry(){
 
     document.getElementById('regGroupFoot').innerHTML=`
       <tr style="border-top:2px solid var(--border);background:var(--surface2);">
-        <td colspan="4" style="padding:10px 12px;font-size:11px;font-weight:600;color:var(--muted);">
+        <td colspan="5" style="padding:10px 12px;font-size:11px;font-weight:600;color:var(--muted);">
           รวม ${gRows.length} รายการ
         </td>
         <td style="text-align:center;padding:10px 12px;font-size:10px;color:var(--muted);">ชิ้น</td>
@@ -1590,7 +1599,7 @@ function renderRegistry(){
   }
 
     dpStore.registry=filtered;
-  document.getElementById('regBody').innerHTML=filtered.map((r,i)=>`<tr style="cursor:pointer;" onclick="openDetail('registry',${i})" onmouseenter="this.style.filter='brightness(1.06)'" onmouseleave="this.style.filter=''"
+  document.getElementById('regBody').innerHTML=filtered.map((r,i)=>`<tr style="cursor:pointer;" onclick="openDetail('registry',${i})" onmouseenter="this.style.filter='brightness(1.06)'" onmouseleave="this.style.filter=''">
     <td onclick="event.stopPropagation()"><input type="checkbox" class="cb-sel cb-reg" data-id="${r.id}" onchange="toggleSel('reg','${r.id}',this)" ${getSelSet('reg').has(r.id)?'checked':''}></td>
     <td class="mono" style="color:var(--muted);">${i+1}</td>
     <td style="max-width:200px;">${r.name}</td>
@@ -1629,7 +1638,7 @@ function renderBuy(){
   document.getElementById('buyNoSerial').textContent=buyTxns.filter(t=>!t.hasSerial).length;
   document.getElementById('buyCount').textContent=filtered.length+' รายการ';
   dpStore.buy=filtered;
-  document.getElementById('buyBody').innerHTML=filtered.map((t,i)=>`<tr style="cursor:pointer;" onclick="openDetail('buy',${i})" onmouseenter="this.style.filter='brightness(1.06)'" onmouseleave="this.style.filter=''"
+  document.getElementById('buyBody').innerHTML=filtered.map((t,i)=>`<tr style="cursor:pointer;" onclick="openDetail('buy',${i})" onmouseenter="this.style.filter='brightness(1.06)'" onmouseleave="this.style.filter=''">
     <td onclick="event.stopPropagation()"><input type="checkbox" class="cb-sel cb-buy" data-id="${t.id}" onchange="toggleSel('buy','${t.id}',this)" ${getSelSet('buy').has(t.id)?'checked':''}></td>
     <td class="mono" style="color:var(--accent);font-size:10px;">${t.id}</td>
     <td class="mono">${t.date}</td>
@@ -2419,11 +2428,14 @@ let acIndex = -1;
 function acOptions(field, q){
   const ql = (q||'').toLowerCase().trim();
   if(field==='name'){
-    // unique names filtered by current type
     const type = document.getElementById('b-type')?.value||'';
     const all = [...new Set(REGISTRY.filter(r=>!type||r.type===type).map(r=>r.name))].sort();
     return all.filter(x=>!ql||x.toLowerCase().includes(ql)).slice(0,12)
-      .map(x=>({label:x, sub:''}));
+      .map(x=>{
+        const reg=REGISTRY.find(r=>r.name===x&&(!type||r.type===type));
+        const priceHint=reg?.stdPrice>0?` · ฿${reg.stdPrice.toLocaleString('th-TH')} (มาตรฐาน)`:'';
+        return {label:x, sub:(reg?.brand||'')+priceHint};
+      });
   }
   if(field==='brand'){
     const all = [...new Set(REGISTRY.map(r=>r.brand).filter(Boolean))].sort();
@@ -2483,6 +2495,22 @@ function acPick(field, val){
       if(match.type){
         const typeEl=document.getElementById('b-type');
         if(typeEl) typeEl.value=match.type;
+      }
+      // Auto-fill standard price from registry
+      if(match.stdPrice>0){
+        const priceEl=document.getElementById('b-price');
+        const hintEl=document.getElementById('b-price-hint');
+        if(priceEl){
+          priceEl.value=match.stdPrice;
+          priceEl.style.background='rgba(0,212,255,.08)';
+          priceEl.title='ราคามาตรฐานจาก Registry — แก้ได้ถ้าราคาจริงต่างออกไป';
+        }
+        if(hintEl) hintEl.textContent='(มาตรฐาน ฿'+match.stdPrice.toLocaleString('th-TH')+')';
+      } else {
+        const priceEl=document.getElementById('b-price');
+        const hintEl=document.getElementById('b-price-hint');
+        if(priceEl){ priceEl.style.background=''; }
+        if(hintEl) hintEl.textContent='';
       }
     }
     document.getElementById('b-itemCode').value='';
@@ -2693,7 +2721,7 @@ function submitBuy(){
   if(!noSer){
     finalSerials.forEach(serial=>{
       const regId='REG-'+uid();
-      REGISTRY.push({id:regId,serial,hasSerial:true,type,name,brand,price,unit:'PCS',
+      REGISTRY.push({id:regId,serial,hasSerial:true,type,name,brand,price,stdPrice:price,unit:'PCS',
         status:'stock',holder:null,dept:null,buyDate:date,buyTxnId:txnId,
         history:[{event:'buy',date,person:'User',note:`Supplier: ${supplier}`,txnId}]});
       TXNS.push({id:'TXN-'+uid(),event:'buy',date,toolId:regId,serial,hasSerial:true,
@@ -2704,7 +2732,7 @@ function submitBuy(){
     const unit=document.getElementById('b-unit').value||'PCS';
     for(let i=0;i<qty;i++){
       const regId='REG-'+uid();
-      REGISTRY.push({id:regId,serial:null,hasSerial:false,type,name,brand,price,unit,
+      REGISTRY.push({id:regId,serial:null,hasSerial:false,type,name,brand,price,stdPrice:price,unit,
         status:'stock',holder:null,dept:null,buyDate:date,buyTxnId:txnId,
         history:[{event:'buy',date,person:'User',note:`Supplier: ${supplier} (${i+1}/${qty})`,txnId}]});
     }
@@ -2738,6 +2766,12 @@ function submitBuy(){
     REGISTRY.filter(t=>t.buyTxnId===txnId).forEach(t=>{ t.imageUrl = buyImageData.tool; });
   }
   resetBuyImages();
+  // Update stdPrice for ALL registry items with same name (propagate latest price)
+  if(price>0){
+    REGISTRY.filter(r=>r.name===name&&r.type===type).forEach(r=>{
+      r.stdPrice = price;
+    });
+  }
   closeModal('buy');
   renderDashboard();renderBuy();renderRegistry();scheduleSave();
   alert(`✅ บันทึกนำเข้าสำเร็จ\n"${name}"\n${!noSer?finalSerials.length+' Serial ('+finalSerials[0]+(finalSerials.length>1?' ~ '+finalSerials[finalSerials.length-1]:'')+')':'qty '+document.getElementById('b-qty').value}${hasImages?'\n📷 กำลังอัพโหลดรูปในพื้นหลัง...':''}`);
@@ -3231,16 +3265,10 @@ async function clearAllData(){
   // 2. Clear localStorage
   try { localStorage.removeItem(LS_KEY); } catch(e){}
 
-  // 3. Push empty to Sheets (if connected)
+  // 3. Clear Sheets via JSONP GET (CORS-safe from GitHub Pages)
   if(GAS_URL){
     showSaveStatus('🗑 กำลังล้างข้อมูลใน Sheets...', 'var(--red)');
-    try {
-      await fetch(GAS_URL, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ REGISTRY: [], TXNS: [] })
-      });
-    } catch(e){}
+    try { await jsonpCall(GAS_URL + '?action=clear'); } catch(e){}
   }
 
   // 4. Re-render everything
@@ -3678,6 +3706,7 @@ function renderDetailRegistry(r, body, foot) {
         ${dpField('ตำแหน่ง / ผู้ถือ', r.holder ? r.holder+(r.dept?' / '+r.dept:'') : 'คลัง')}
         ${dpField('วันที่นำเข้า', r.buyDate)}
       </div>
+      ${dpField('ราคามาตรฐาน', r.stdPrice>0?'฿'+r.stdPrice.toLocaleString('th-TH'):null)}
       ${dpField('หมายเหตุ', r.note)}
       ${txn ? dpImgSection(txn.receiptUrl||r.imageUrl||'', txn.toolUrl||r.imageUrl||'') : ''}
       <hr class="dp-divider">
@@ -3690,8 +3719,9 @@ function renderDetailRegistry(r, body, foot) {
       ${dpField('Serial Code', `<span class="mono" style="color:var(--accent)">${r.serial||'N/A'}</span>`)}
       <div class="dp-grid">
         ${dpInput('แบรนด์', 'brand', r.brand)}
-        ${dpInput('ตำแหน่ง / ผู้ถือ', 'holder', r.holder)}
+        ${dpInput('ราคามาตรฐาน (฿)', 'stdPrice', r.stdPrice||0, 'number')}
       </div>
+      ${dpInput('ตำแหน่ง / ผู้ถือ', 'holder', r.holder)}
       ${dpInput('หมายเหตุ', 'note', r.note)}`;
     foot.innerHTML = `<button class="btn" onclick="dpToggleEdit()">ยกเลิก</button>${dpSaveBtn('dpSaveRegistry()')}`;
   }
@@ -3701,7 +3731,7 @@ function dpSaveRegistry() {
   const r = dpList[dpIdx];
   const rIdx = REGISTRY.findIndex(x => x.id === r.id);
   if (rIdx < 0) return;
-  REGISTRY[rIdx] = { ...REGISTRY[rIdx], brand: vals.brand, holder: vals.holder, note: vals.note };
+  REGISTRY[rIdx] = { ...REGISTRY[rIdx], brand: vals.brand, stdPrice: parseFloat(vals.stdPrice)||0, holder: vals.holder, note: vals.note };
   dpList[dpIdx] = REGISTRY[rIdx];
   scheduleSave(); renderRegistry();
   dpEdit = false; renderDetail();
