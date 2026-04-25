@@ -2395,29 +2395,37 @@ Status: ${r.status}
 function deleteTxn(id){
   const t = TXNS.find(x=>x.id===id);
   if(!t) return;
-  const label = `[${t.event.toUpperCase()}] ${t.date} — ${t.name}${t.serial?' ('+t.serial+')':''}`;
+  const label = '['+t.event.toUpperCase()+'] '+t.date+' — '+t.name+(t.serial?' ('+t.serial+')':'');
 
-  // Warn if deleting affects registry status
+  // ถ้าเป็น buy → หา tool ที่ต้องลบใน Registry ด้วย
+  const isBuy = t.event === 'buy';
+  // หา tool ที่เชื่อมกับ transaction นี้ — ค้นด้วย buyTxnId หรือ serial+name เป็น fallback
+  const affectedTools = isBuy ? REGISTRY.filter(r=>{
+    if(r.buyTxnId && r.buyTxnId===t.id) return true;
+    if(!r.buyTxnId && t.serial && r.serial===t.serial) return true;
+    if(!r.buyTxnId && !t.serial && r.name===t.name && r.type===t.type && r.buyDate===t.date) return true;
+    return false;
+  }) : [];
+  const toolList = affectedTools.slice(0,5).map(r=>r.serial||r.name).join(', ')+(affectedTools.length>5?'...':'');
+  const buyWarn = affectedTools.length>0 ? '\n\n🗑 จะลบ Tool ใน Registry ด้วย ('+affectedTools.length+' รายการ):\n'+toolList : '';
   const affectsStatus = ['issue','return','reissue','inspect'].includes(t.event);
-  const warn = affectsStatus ? '\n\n⚠ Transaction นี้มีผลต่อ Status ของ Tool ในระบบ\nStatus จะไม่ถูก rollback อัตโนมัติ กรุณาตรวจสอบ Tool Registry ด้วย' : '';
-  if(!confirm(`ลบ Transaction นี้?
+  const statusWarn = affectsStatus ? '\n\n⚠ Transaction นี้มีผลต่อ Status ของ Tool' : '';
 
-${label}${warn}`)) return;
+  if(!confirm('ลบ Transaction นี้?\n\n'+label+buyWarn+statusWarn)) return;
 
-  const idx = TXNS.indexOf(t);
-  TXNS.splice(idx, 1);
-  // Re-render current page
-  const pages = ['buy','issue','return','reissue'];
-  pages.forEach(p=>{
-    const el=document.getElementById('page-'+p);
-    if(el&&el.classList.contains('active')){
-      if(p==='buy') renderBuy();
-      if(p==='issue') renderIssue();
-      if(p==='return') renderReturn();
-      if(p==='reissue') renderReissue();
-    scheduleSave();
-    }
-  });
+  // ลบ TXNS
+  TXNS.splice(TXNS.indexOf(t), 1);
+
+  // ถ้าเป็น buy → ลบ Registry ที่เชื่อมกับ transaction นี้ด้วย
+  if(isBuy && affectedTools.length>0){
+    affectedTools.forEach(r=>{
+      const ri = REGISTRY.indexOf(r);
+      if(ri>=0) REGISTRY.splice(ri,1);
+    });
+  }
+
+  renderBuy(); renderRegistry(); renderDashboard();
+  scheduleSave();
 }
 
 // ═══════════════════════════════════════════
@@ -3516,9 +3524,22 @@ function dpSaveBuy() {
   const t = dpList[dpIdx];
   const txIdx = TXNS.findIndex(x => x.id === t.id);
   if (txIdx < 0) return;
-  TXNS[txIdx] = { ...TXNS[txIdx], date: vals.date, price: parseFloat(vals.price)||0, supplier: vals.supplier, note: vals.note };
+  const newPrice = parseFloat(vals.price)||0;
+  TXNS[txIdx] = { ...TXNS[txIdx], date: vals.date, price: newPrice, supplier: vals.supplier, note: vals.note };
   dpList[dpIdx] = TXNS[txIdx];
-  scheduleSave(); renderBuy();
+
+  // Sync Registry — อัพเดท buyDate และ stdPrice ของ tool ที่ซื้อมาใน transaction นี้
+  const relatedTools = REGISTRY.filter(r => r.buyTxnId === t.id);
+  relatedTools.forEach(r => {
+    r.buyDate = vals.date;
+    if(newPrice > 0){ r.price = newPrice; r.stdPrice = newPrice; }
+  });
+  // อัพเดท stdPrice ทุก tool ชื่อเดียวกันด้วย
+  if(newPrice > 0){
+    REGISTRY.filter(r=>r.name===t.name&&r.type===t.type).forEach(r=>{ r.stdPrice=newPrice; });
+  }
+
+  scheduleSave(); renderBuy(); renderRegistry(); renderDashboard();
   dpEdit = false; renderDetail();
 }
 
