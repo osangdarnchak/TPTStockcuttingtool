@@ -572,14 +572,7 @@ tr.selected-row{background:rgba(239,68,68,.07);}
             <div class="card-title" id="regCardTitle">🗂 Tool Registry</div>
             <!-- View toggle -->
             <div style="display:flex;background:var(--surface2);border:1px solid var(--border);border-radius:7px;overflow:hidden;">
-              <button id="regViewGroup" onclick="setRegView('group')"
-                style="padding:4px 10px;border:none;font-family:inherit;font-size:10px;font-weight:600;cursor:pointer;background:var(--accent);color:#000;transition:all .12s;">
-                📋 Summary
-              </button>
-              <button id="regViewSerial" onclick="setRegView('serial')"
-                style="padding:4px 10px;border:none;font-family:inherit;font-size:10px;font-weight:600;cursor:pointer;background:transparent;color:var(--muted);transition:all .12s;">
-                🔩 รายชิ้น
-              </button>
+
             </div>
           </div>
           <span class="tag tb" id="regCount">0 รายการ</span>
@@ -1477,13 +1470,13 @@ function updateBadges(){
 // ═══════════════════════════════════════════
 //  REGISTRY
 // ═══════════════════════════════════════════
-let regCurrentView = 'group';
+let regCurrentView = 'group'; // always group
 
 function setRegView(view){
   regCurrentView = view;
   const isSerial = view === 'serial';
-  document.getElementById('regSerialView').style.display = isSerial ? '' : 'none';
-  document.getElementById('regGroupView').style.display  = isSerial ? 'none' : '';
+  document.getElementById('regSerialView').style.display = 'none';
+  document.getElementById('regGroupView').style.display  = '';
   document.getElementById('regViewGroup').style.background = !isSerial ? 'var(--accent)' : 'transparent';
   document.getElementById('regViewGroup').style.color      = !isSerial ? '#000' : 'var(--muted)';
   document.getElementById('regViewSerial').style.background = isSerial ? 'var(--accent)' : 'transparent';
@@ -2786,7 +2779,7 @@ function submitBuy(){
         status:'stock',holder:null,dept:null,buyDate:date,buyTxnId:txnId,
         history:[{event:'buy',date,person:'User',note:`Supplier: ${supplier} (${i+1}/${qty})`,txnId}]});
     }
-    TXNS.push({id:txnId,event:'buy',date,toolId:null,serial:'N/A',hasSerial:false,
+    TXNS.push({id:txnId,event:'buy',date,createdAt:new Date().toISOString(),toolId:null,serial:'N/A',hasSerial:false,
       type,name,brand,qty,supplier,price,note,unit});
   }
   // Upload images if any
