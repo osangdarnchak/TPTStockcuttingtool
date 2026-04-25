@@ -601,7 +601,6 @@ tr.selected-row{background:rgba(239,68,68,.07);}
               <th>ประเภท</th>
               <th>รายการ</th>
               <th style="text-align:right;">ราคามาตรฐาน</th>
-              <th style="text-align:right;">ราคาล่าสุด</th>
               <th style="text-align:center;">หน่วยนับ</th>
               <th style="text-align:center;color:var(--accent);">จำนวนสินค้าคงเหลือ</th>
               <th style="text-align:right;color:var(--green);">มูลค่าคงเหลือ</th>
@@ -1532,11 +1531,10 @@ function renderRegistry(){
       const key=r.type+'||'+r.name;
       if(!groups[key]) groups[key]={
         type:r.type, name:r.name, brand:r.brand||'',
-        price:r.price||0, stdPrice:r.stdPrice||0, unit:r.unit||'PCS', stock:0
+        stdPrice:r.stdPrice||0, unit:r.unit||'PCS', stock:0
       };
       const g=groups[key];
-      if((r.price||0)>g.price) g.price=r.price; // ราคาล่าสุดสูงสุดในกลุ่ม
-      if((r.stdPrice||0)>g.stdPrice) g.stdPrice=r.stdPrice; // ราคามาตรฐานสูงสุด
+      if((r.stdPrice||0)>g.stdPrice) g.stdPrice=r.stdPrice; // ราคามาตรฐาน
       if(r.unit&&r.unit!=='PCS') g.unit=r.unit;
       if(r.status==='stock') g.stock++;
     });
@@ -1551,11 +1549,11 @@ function renderRegistry(){
 
     const fmt=(n)=>n.toLocaleString('th-TH',{minimumFractionDigits:2,maximumFractionDigits:2});
     const totalQty=gRows.reduce((s,g)=>s+g.stock,0);
-    const totalVal=gRows.reduce((s,g)=>s+(g.stock*(g.price||g.stdPrice||0)),0);
+    const totalVal=gRows.reduce((s,g)=>s+(g.stock*(g.stdPrice||0)),0);
 
     document.getElementById('regCount').textContent=gRows.length+' รายการ';
     document.getElementById('regGroupBody').innerHTML=gRows.map((g,i)=>{
-      const val=g.stock*(g.price||g.stdPrice||0);
+      const val=g.stock*(g.stdPrice||0);
       const qc=g.stock===0?'var(--red)':g.stock<=2?'var(--yellow)':'var(--accent)';
       const qb=g.stock===0?'rgba(239,68,68,.08)':g.stock<=2?'rgba(245,158,11,.08)':'transparent';
       return `<tr>
@@ -1568,23 +1566,20 @@ function renderRegistry(){
         <td style="text-align:right;">
           ${g.stdPrice>0?`<span class="mono" style="color:var(--accent);">฿${fmt(g.stdPrice)}</span>`:`<span style="color:var(--muted);">—</span>`}
         </td>
-        <td style="text-align:right;">
-          ${g.price>0?`<span class="mono">฿${fmt(g.price)}</span>`:`<span style="color:var(--muted);">—</span>`}
-        </td>
         <td style="text-align:center;color:var(--muted);font-size:11px;">${g.unit}</td>
         <td style="text-align:center;background:${qb};border-radius:6px;padding:8px 12px;">
           <div class="mono" style="font-size:18px;font-weight:700;color:${qc};">${g.stock}</div>
           ${g.stock===0?'<div style="font-size:9px;color:var(--red);">หมด</div>':g.stock<=2?'<div style="font-size:9px;color:var(--yellow);">⚠ ต่ำ</div>':''}
         </td>
         <td style="text-align:right;">
-          ${g.price>0&&g.stock>0?`<span class="mono" style="color:var(--green);">฿${fmt(val)}</span>`:`<span style="color:var(--muted);">—</span>`}
+          ${g.stdPrice>0&&g.stock>0?`<span class="mono" style="color:var(--green);">฿${fmt(val)}</span>`:`<span style="color:var(--muted);">—</span>`}
         </td>
       </tr>`;
     }).join('');
 
     document.getElementById('regGroupFoot').innerHTML=`
       <tr style="border-top:2px solid var(--border);background:var(--surface2);">
-        <td colspan="5" style="padding:10px 12px;font-size:11px;font-weight:600;color:var(--muted);">
+        <td colspan="4" style="padding:10px 12px;font-size:11px;font-weight:600;color:var(--muted);">
           รวม ${gRows.length} รายการ
         </td>
         <td style="text-align:center;padding:10px 12px;font-size:10px;color:var(--muted);">ชิ้น</td>
