@@ -1556,11 +1556,12 @@ function renderRegistry(){
     const totalVal=gRows.reduce((s,g)=>s+g.stockCost,0);
 
     document.getElementById('regCount').textContent=gRows.length+' รายการ';
+    dpStore.group=gRows;
     document.getElementById('regGroupBody').innerHTML=gRows.map((g,i)=>{
       const val=g.stockCost;
       const qc=g.stock===0?'var(--red)':g.stock<=2?'var(--yellow)':'var(--accent)';
       const qb=g.stock===0?'rgba(239,68,68,.08)':g.stock<=2?'rgba(245,158,11,.08)':'transparent';
-      return `<tr>
+      return `<tr style="cursor:pointer;" onclick="openGroupDetail(${i})" onmouseenter="this.style.filter='brightness(1.08)'" onmouseleave="this.style.filter=''">
         <td class="mono" style="color:var(--muted);font-size:11px;">${i+1}</td>
         <td><span class="tag ${tagCls(g.type)}">${g.type}</span></td>
         <td>
@@ -1631,7 +1632,11 @@ function renderBuy(){
   const types=[...new Set(buyTxns.map(t=>t.type))].sort();
   const tf_el=document.getElementById('buyTypeF');
   if(tf_el&&tf_el.options.length<=1) types.forEach(t=>{const o=document.createElement('option');o.value=t;o.textContent=t;tf_el.appendChild(o);});
-  const filtered=buyTxns.filter(t=>(!tf||t.type===tf)&&(!q||t.name.toLowerCase().includes(q)||(t.serial||'').toLowerCase().includes(q)||(t.supplier||'').toLowerCase().includes(q))).sort((a,b)=>(b.date||'').localeCompare(a.date||'')||b.id.localeCompare(a.id));
+  const filtered=buyTxns.filter(t=>(!tf||t.type===tf)&&(!q||t.name.toLowerCase().includes(q)||(t.serial||'').toLowerCase().includes(q)||(t.supplier||'').toLowerCase().includes(q))).sort((a,b)=>{
+    const ca=a.createdAt||a.date||'';
+    const cb=b.createdAt||b.date||'';
+    return cb.localeCompare(ca)||b.id.localeCompare(a.id);
+  });
   document.getElementById('buyTotal').textContent=buyTxns.length;
   document.getElementById('buyWithSerial').textContent=buyTxns.filter(t=>t.hasSerial).length;
   document.getElementById('buyNoSerial').textContent=buyTxns.filter(t=>!t.hasSerial).length;
@@ -1659,7 +1664,11 @@ function renderIssue(){
   const q=(document.getElementById('issueSearch')?.value||'').toLowerCase();
   const df=document.getElementById('issueDeptFilter')?.value||'';
   const issueTxns=TXNS.filter(t=>t.event==='issue');
-  const filtered=issueTxns.filter(t=>(!df||t.dept===df)&&(!q||t.name.toLowerCase().includes(q)||(t.serial||'').toLowerCase().includes(q))).sort((a,b)=>(b.date||'').localeCompare(a.date||'')||b.id.localeCompare(a.id));
+  const filtered=issueTxns.filter(t=>(!df||t.dept===df)&&(!q||t.name.toLowerCase().includes(q)||(t.serial||'').toLowerCase().includes(q))).sort((a,b)=>{
+    const ca=a.createdAt||a.date||'';
+    const cb=b.createdAt||b.date||'';
+    return cb.localeCompare(ca)||b.id.localeCompare(a.id);
+  });
   document.getElementById('issueTotal').textContent=issueTxns.length;
   document.getElementById('issueInUse').textContent=REGISTRY.filter(r=>r.status==='inuse').length;
   document.getElementById('issueDeptR').textContent=issueTxns.filter(t=>t.dept==='Repeat').length;
@@ -1690,7 +1699,11 @@ function renderReturn(){
   const q=(document.getElementById('retSearch')?.value||'').toLowerCase();
   const sf=document.getElementById('retStatusF')?.value||'';
   const retTxns=TXNS.filter(t=>t.event==='return');
-  const filtered=retTxns.filter(t=>(!sf||t.retStatus===sf)&&(!q||t.name.toLowerCase().includes(q)||(t.serial||'').toLowerCase().includes(q))).sort((a,b)=>(b.date||'').localeCompare(a.date||'')||b.id.localeCompare(a.id));
+  const filtered=retTxns.filter(t=>(!sf||t.retStatus===sf)&&(!q||t.name.toLowerCase().includes(q)||(t.serial||'').toLowerCase().includes(q))).sort((a,b)=>{
+    const ca=a.createdAt||a.date||'';
+    const cb=b.createdAt||b.date||'';
+    return cb.localeCompare(ca)||b.id.localeCompare(a.id);
+  });
   document.getElementById('retTotal').textContent=retTxns.length;
   document.getElementById('retInspect').textContent=retTxns.filter(t=>t.retStatus==='used_inspect').length;
   document.getElementById('retOK').textContent=retTxns.filter(t=>t.retStatus==='used_ok').length;
@@ -1727,7 +1740,11 @@ function renderReissue(){
   const q=(document.getElementById('riSearch')?.value||'').toLowerCase();
   const df=document.getElementById('riDeptF')?.value||'';
   const riTxns=TXNS.filter(t=>t.event==='reissue');
-  const filtered=riTxns.filter(t=>(!df||t.dept===df)&&(!q||t.name.toLowerCase().includes(q)||(t.serial||'').toLowerCase().includes(q))).sort((a,b)=>(b.date||'').localeCompare(a.date||'')||b.id.localeCompare(a.id));
+  const filtered=riTxns.filter(t=>(!df||t.dept===df)&&(!q||t.name.toLowerCase().includes(q)||(t.serial||'').toLowerCase().includes(q))).sort((a,b)=>{
+    const ca=a.createdAt||a.date||'';
+    const cb=b.createdAt||b.date||'';
+    return cb.localeCompare(ca)||b.id.localeCompare(a.id);
+  });
   const avail=REGISTRY.filter(r=>r.status==='used_ok').length;
   const saving=riTxns.reduce((s,t)=>s+(t.saving||0),0);
   document.getElementById('riTotal').textContent=riTxns.length;
@@ -2751,7 +2768,7 @@ function submitBuy(){
       REGISTRY.push({id:regId,serial,hasSerial:true,type,name,brand,price,stdPrice:price,unit:'PCS',
         status:'stock',holder:null,dept:null,buyDate:date,buyTxnId:txnId,
         history:[{event:'buy',date,person:'User',note:`Supplier: ${supplier}`,txnId}]});
-      TXNS.push({id:'TXN-'+uid(),event:'buy',date,toolId:regId,serial,hasSerial:true,
+      TXNS.push({id:'TXN-'+uid(),event:'buy',date,createdAt:new Date().toISOString(),toolId:regId,serial,hasSerial:true,
         type,name,brand,qty:1,supplier,price,note});
     });
   } else {
@@ -2875,7 +2892,7 @@ function submitIssue(){
     if(!r.hasSerial && r.qty!=null) r.qty=Math.max(0,(r.qty||0)-qty);
     const noteText = action + (oldSerial ? ` (เปลี่ยนจาก: ${oldSerial})` : '');
     r.history.push({event:'issue',date,person,note:noteText,txnId});
-    TXNS.push({id:txnId,event:'issue',date,toolId:r.id,serial:r.serial,hasSerial:r.hasSerial,
+    TXNS.push({id:txnId,event:'issue',date,createdAt:new Date().toISOString(),toolId:r.id,serial:r.serial,hasSerial:r.hasSerial,
       type:r.type,name:r.name,brand:r.brand,qty,dept,person,action,
       oldSerial:oldSerial||null,note:noteText});
 
@@ -2888,7 +2905,7 @@ function submitIssue(){
         oldTool.holder=null;
         oldTool.history.push({event:'return',date,person,
           note:`คืนเพื่อเปลี่ยน (เบิก: ${r.serial||r.name})`,txnId:retTxnId});
-        TXNS.push({id:retTxnId,event:'return',date,toolId:oldTool.id,
+        TXNS.push({id:retTxnId,event:'return',date,createdAt:new Date().toISOString(),toolId:oldTool.id,
           serial:oldTool.serial,hasSerial:true,type:oldTool.type,name:oldTool.name,
           brand:oldTool.brand,qty:1,dept,person,
           note:`คืนอัตโนมัติ — เปลี่ยนเป็น ${r.serial||r.name}`,
@@ -2917,7 +2934,7 @@ function submitReturn(){
     const txnId='TXN-'+uid();
     r.status=status;r.holder=null;r.dept=r.dept;
     r.history.push({event:'return',date,person,note,txnId});
-    TXNS.push({id:txnId,event:'return',date,toolId:r.id,serial:r.serial,hasSerial:r.hasSerial,
+    TXNS.push({id:txnId,event:'return',date,createdAt:new Date().toISOString(),toolId:r.id,serial:r.serial,hasSerial:r.hasSerial,
       type:r.type,name:r.name,qty:1,dept:r.dept,person,retStatus:status,note});
   } else {
     // manual
@@ -2961,7 +2978,7 @@ function submitReissue(){
   const txnId='TXN-'+uid();
   r.status='inuse';r.holder=person;r.dept=dept;
   r.history.push({event:'reissue',date,person,note:'Used tool re-issued',txnId});
-  TXNS.push({id:txnId,event:'reissue',date,toolId:r.id,serial:r.serial,hasSerial:r.hasSerial,
+  TXNS.push({id:txnId,event:'reissue',date,createdAt:new Date().toISOString(),toolId:r.id,serial:r.serial,hasSerial:r.hasSerial,
     type:r.type,name:r.name,qty:1,dept,person,saving,note:''});
   closeModal('reissue');
   renderDashboard();renderReissue();renderRegistry();scheduleSave();
@@ -3775,6 +3792,83 @@ function dpSaveRegistry() {
   dpList[dpIdx] = REGISTRY[rIdx];
   scheduleSave(); renderRegistry();
   dpEdit = false; renderDetail();
+}
+
+
+// ── GROUP DETAIL POPUP ──
+function openGroupDetail(idx) {
+  const g = dpStore.group[idx];
+  if (!g) return;
+
+  // หา transactions ทั้งหมดที่เกี่ยวข้องกับ tool ชื่อนี้
+  const txns = TXNS.filter(t => t.name === g.name && t.type === g.type)
+    .sort((a,b)=>(b.date||'').localeCompare(a.date||''));
+
+  const evLabel = {buy:'📥 นำเข้า', issue:'📤 เบิกออก', return:'↩ คืน', reissue:'♻ เบิก Used'};
+  const evColor = {buy:'var(--accent)', issue:'var(--yellow)', return:'var(--orange)', reissue:'var(--green)'};
+  const evBg   = {buy:'rgba(0,212,255,.12)', issue:'rgba(245,158,11,.12)', return:'rgba(249,115,22,.12)', reissue:'rgba(34,197,94,.12)'};
+
+  // นับ tool ปัจจุบันแยก status
+  const regItems = REGISTRY.filter(r => r.name===g.name && r.type===g.type);
+  const countStock    = regItems.filter(r=>r.status==='stock').length;
+  const countInuse    = regItems.filter(r=>r.status==='inuse').length;
+  const countInspect  = regItems.filter(r=>r.status==='used_inspect').length;
+  const countUsedOk   = regItems.filter(r=>r.status==='used_ok').length;
+  const countScrapped = regItems.filter(r=>r.status==='scrapped').length;
+
+  const fmt = n => n.toLocaleString('th-TH', {minimumFractionDigits:2, maximumFractionDigits:2});
+
+  const histHtml = txns.length === 0
+    ? '<div style="color:var(--muted);font-size:12px;padding:16px 0;text-align:center;">ยังไม่มีประวัติ</div>'
+    : txns.map(t => `
+      <div style="display:flex;gap:10px;align-items:flex-start;padding:10px 12px;border-radius:8px;background:${evBg[t.event]||'var(--surface2)'};margin-bottom:6px;">
+        <div style="flex-shrink:0;margin-top:1px;">
+          <span class="tag" style="background:${evColor[t.event]||'var(--muted)'};color:#000;font-size:9px;padding:2px 6px;">${evLabel[t.event]||t.event}</span>
+        </div>
+        <div style="flex:1;min-width:0;">
+          <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:3px;">
+            <span class="mono" style="font-size:11px;color:var(--muted);">${t.date||'-'}</span>
+            ${t.serial?`<span class="mono" style="font-size:11px;background:var(--surface);border:1px solid var(--border);padding:1px 6px;border-radius:4px;">${t.serial}</span>`:''}
+            ${t.qty>1?`<span style="font-size:11px;color:var(--muted);">×${t.qty}</span>`:''}
+            ${t.price>0?`<span class="mono" style="font-size:11px;color:var(--green);">฿${fmt(t.price)}</span>`:''}
+          </div>
+          <div style="font-size:11px;color:var(--muted);">
+            ${t.supplier?'Supplier: '+t.supplier+' · ':''}${t.dept?'แผนก: '+t.dept+' · ':''}${t.person?t.person:''}${t.job?' · '+t.job:''}${t.note?' · '+t.note:''}
+          </div>
+        </div>
+      </div>`).join('');
+
+  document.getElementById('dp-title').textContent = '['+g.type+'] '+g.name;
+  document.getElementById('dp-sub') && (document.getElementById('dp-sub').textContent = '');
+  document.getElementById('dp-counter').textContent = (idx+1)+' / '+(dpStore.group||[]).length;
+  document.getElementById('dp-prev').disabled = idx===0;
+  document.getElementById('dp-next').disabled = idx===(dpStore.group||[]).length-1;
+  document.getElementById('dp-prev').onclick = ()=>openGroupDetail(idx-1);
+  document.getElementById('dp-next').onclick = ()=>openGroupDetail(idx+1);
+
+  document.getElementById('dp-body').innerHTML = `
+    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:16px;">
+      <div style="background:var(--surface2);border-radius:8px;padding:10px;text-align:center;">
+        <div style="font-size:10px;color:var(--muted);margin-bottom:2px;">ใน Stock</div>
+        <div style="font-size:20px;font-weight:700;color:var(--accent);">${countStock}</div>
+      </div>
+      <div style="background:var(--surface2);border-radius:8px;padding:10px;text-align:center;">
+        <div style="font-size:10px;color:var(--muted);margin-bottom:2px;">กำลังใช้</div>
+        <div style="font-size:20px;font-weight:700;color:var(--yellow);">${countInuse}</div>
+      </div>
+      <div style="background:var(--surface2);border-radius:8px;padding:10px;text-align:center;">
+        <div style="font-size:10px;color:var(--muted);margin-bottom:2px;">Scrapped</div>
+        <div style="font-size:20px;font-weight:700;color:var(--red);">${countScrapped}</div>
+      </div>
+    </div>
+    <div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;margin-bottom:8px;">
+      📋 ประวัติทั้งหมด (${txns.length} รายการ)
+    </div>
+    ${histHtml}
+  `;
+
+  document.getElementById('dp-foot').innerHTML = '';
+  document.getElementById('dp-overlay').classList.add('open');
 }
 
 // ── IMAGE VIEWER ──
