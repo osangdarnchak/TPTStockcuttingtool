@@ -579,7 +579,7 @@ tr.selected-row{background:rgba(239,68,68,.07);}
         </div>
 
         <!-- SERIAL VIEW -->
-        <div id="regSerialView">
+        <div id="regSerialView" style="display:none;">
           <div class="tw"><table>
             <thead><tr><th><input type="checkbox" class="cb-sel" id="cb-all-reg" onchange="toggleSelAll('reg',this)"></th><th>#</th><th>รายการ Tool</th><th>ประเภท</th><th>Serial</th><th>แบรนด์</th><th>Status</th><th>ตำแหน่ง/ผู้ถือ</th><th>ซื้อเมื่อ</th><th>รูป</th></tr></thead>
             <tbody id="regBody"></tbody>
@@ -587,7 +587,7 @@ tr.selected-row{background:rgba(239,68,68,.07);}
         </div>
 
         <!-- GROUP / SUMMARY VIEW -->
-        <div id="regGroupView" style="display:none;">
+        <div id="regGroupView">
           <div class="tw"><table>
             <thead><tr>
               <th>#</th>
@@ -1481,7 +1481,7 @@ function setRegView(view){
   document.getElementById('regViewGroup').style.color      = !isSerial ? '#000' : 'var(--muted)';
   document.getElementById('regViewSerial').style.background = isSerial ? 'var(--accent)' : 'transparent';
   document.getElementById('regViewSerial').style.color     = isSerial ? '#000' : 'var(--muted)';
-  document.getElementById('regCardTitle').textContent = isSerial ? '🗂 Tool Registry — รายชิ้น (Serial)' : '📋 Tool Registry — Summary (Group by Model)';
+  document.getElementById('regCardTitle').textContent = '📋 Tool Registry — Summary';
   renderRegistry();
 }
 
