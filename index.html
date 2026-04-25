@@ -1531,12 +1531,16 @@ function renderRegistry(){
       const key=r.type+'||'+r.name;
       if(!groups[key]) groups[key]={
         type:r.type, name:r.name, brand:r.brand||'',
-        stdPrice:r.stdPrice||0, unit:r.unit||'PCS', stock:0
+        stdPrice:r.stdPrice||0, unit:r.unit||'PCS', stock:0, stockCost:0
       };
       const g=groups[key];
-      if((r.stdPrice||0)>g.stdPrice) g.stdPrice=r.stdPrice; // ราคามาตรฐาน
+      if((r.stdPrice||0)>g.stdPrice) g.stdPrice=r.stdPrice;
       if(r.unit&&r.unit!=='PCS') g.unit=r.unit;
-      if(r.status==='stock') g.stock++;
+      if(r.status==='stock'){
+        g.stock++;
+        const bt=TXNS.find(t=>t.id===r.buyTxnId&&t.event==='buy');
+        g.stockCost+=(bt&&bt.price>0)?bt.price:(r.stdPrice||0);
+      }
     });
 
     let gRows=Object.values(groups);
@@ -1549,11 +1553,11 @@ function renderRegistry(){
 
     const fmt=(n)=>n.toLocaleString('th-TH',{minimumFractionDigits:2,maximumFractionDigits:2});
     const totalQty=gRows.reduce((s,g)=>s+g.stock,0);
-    const totalVal=gRows.reduce((s,g)=>s+(g.stock*(g.stdPrice||0)),0);
+    const totalVal=gRows.reduce((s,g)=>s+g.stockCost,0);
 
     document.getElementById('regCount').textContent=gRows.length+' รายการ';
     document.getElementById('regGroupBody').innerHTML=gRows.map((g,i)=>{
-      const val=g.stock*(g.stdPrice||0);
+      const val=g.stockCost;
       const qc=g.stock===0?'var(--red)':g.stock<=2?'var(--yellow)':'var(--accent)';
       const qb=g.stock===0?'rgba(239,68,68,.08)':g.stock<=2?'rgba(245,158,11,.08)':'transparent';
       return `<tr>
@@ -1572,7 +1576,7 @@ function renderRegistry(){
           ${g.stock===0?'<div style="font-size:9px;color:var(--red);">หมด</div>':g.stock<=2?'<div style="font-size:9px;color:var(--yellow);">⚠ ต่ำ</div>':''}
         </td>
         <td style="text-align:right;">
-          ${g.stdPrice>0&&g.stock>0?`<span class="mono" style="color:var(--green);">฿${fmt(val)}</span>`:`<span style="color:var(--muted);">—</span>`}
+          ${val>0?`<span class="mono" style="color:var(--green);">฿${fmt(val)}</span>`:`<span style="color:var(--muted);">—</span>`}
         </td>
       </tr>`;
     }).join('');
