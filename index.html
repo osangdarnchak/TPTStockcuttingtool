@@ -2763,6 +2763,12 @@ function submitBuy(){
   }
   const txnId='TXN-'+uid();
   if(!noSer){
+    // เรียง serial ตามลำดับเลขท้าย (01, 02, ... 10) ก่อน push
+    finalSerials.sort((a,b)=>{
+      const na=parseInt(a.split('-').pop())||0;
+      const nb=parseInt(b.split('-').pop())||0;
+      return na-nb;
+    });
     finalSerials.forEach(serial=>{
       const regId='REG-'+uid();
       REGISTRY.push({id:regId,serial,hasSerial:true,type,name,brand,price,stdPrice:price,unit:'PCS',
