@@ -1095,7 +1095,7 @@ const TYPE_COLORS={"Insert":"#00d4ff","Endmill":"#7c3aed","Tap":"#22c55e","Drill
 const tc=t=>TYPE_COLORS[t]||'#64748b';
 const tagCls=t=>({Insert:'tb',Endmill:'tp',Tap:'tg',Drill:'ty',Ball:'tr',Reamer:'tb',screw:'tm'}[t]||'tm');
 const uid=()=>Math.random().toString(36).slice(2,8).toUpperCase();
-const today=()=>new Date().toISOString().split('T')[0];
+const today=()=>{const d=new Date();return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');};
 const statusPill=s=>({
   stock:'<span class="sp sp-stock">📦 Stock</span>',
   inuse:'<span class="sp sp-inuse">🔧 In Use</span>',
@@ -3146,7 +3146,7 @@ function exportCSV(){
 function exportExcel(){
   if(typeof XLSX==='undefined'){ alert('กำลังโหลด SheetJS...'); return; }
   const wb = XLSX.utils.book_new();
-  const today = new Date().toISOString().slice(0,10);
+  const today = (()=>{const d=new Date();return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');})();
 
   // Sheet 1: Tool Registry
   const regHeaders=['#','Serial','ประเภท','รายการ Tool','แบรนด์','Status','ผู้ถือ/ผู้เบิก','แผนก','วันที่ซื้อ','ราคา/ชิ้น','หน่วย'];
