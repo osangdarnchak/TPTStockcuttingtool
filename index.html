@@ -1628,7 +1628,13 @@ function renderBuy(){
   const filtered=buyTxns.filter(t=>(!tf||t.type===tf)&&(!q||t.name.toLowerCase().includes(q)||(t.serial||'').toLowerCase().includes(q)||(t.supplier||'').toLowerCase().includes(q))).sort((a,b)=>{
     const ca=a.createdAt||a.date||'';
     const cb=b.createdAt||b.date||'';
-    return cb.localeCompare(ca)||b.id.localeCompare(a.id);
+    const dateCmp=cb.localeCompare(ca);
+    if(dateCmp!==0) return dateCmp;
+    // วันที่เดียวกัน → เรียงตาม serial number ท้าย (01, 02, ... 10)
+    const sa=parseInt((a.serial||'').split('-').pop())||0;
+    const sb=parseInt((b.serial||'').split('-').pop())||0;
+    if(sa!==sb) return sa-sb;
+    return b.id.localeCompare(a.id);
   });
   document.getElementById('buyTotal').textContent=buyTxns.length;
   document.getElementById('buyWithSerial').textContent=buyTxns.filter(t=>t.hasSerial).length;
@@ -1660,7 +1666,13 @@ function renderIssue(){
   const filtered=issueTxns.filter(t=>(!df||t.dept===df)&&(!q||t.name.toLowerCase().includes(q)||(t.serial||'').toLowerCase().includes(q))).sort((a,b)=>{
     const ca=a.createdAt||a.date||'';
     const cb=b.createdAt||b.date||'';
-    return cb.localeCompare(ca)||b.id.localeCompare(a.id);
+    const dateCmp=cb.localeCompare(ca);
+    if(dateCmp!==0) return dateCmp;
+    // วันที่เดียวกัน → เรียงตาม serial number ท้าย (01, 02, ... 10)
+    const sa=parseInt((a.serial||'').split('-').pop())||0;
+    const sb=parseInt((b.serial||'').split('-').pop())||0;
+    if(sa!==sb) return sa-sb;
+    return b.id.localeCompare(a.id);
   });
   document.getElementById('issueTotal').textContent=issueTxns.length;
   document.getElementById('issueInUse').textContent=REGISTRY.filter(r=>r.status==='inuse').length;
@@ -1695,7 +1707,13 @@ function renderReturn(){
   const filtered=retTxns.filter(t=>(!sf||t.retStatus===sf)&&(!q||t.name.toLowerCase().includes(q)||(t.serial||'').toLowerCase().includes(q))).sort((a,b)=>{
     const ca=a.createdAt||a.date||'';
     const cb=b.createdAt||b.date||'';
-    return cb.localeCompare(ca)||b.id.localeCompare(a.id);
+    const dateCmp=cb.localeCompare(ca);
+    if(dateCmp!==0) return dateCmp;
+    // วันที่เดียวกัน → เรียงตาม serial number ท้าย (01, 02, ... 10)
+    const sa=parseInt((a.serial||'').split('-').pop())||0;
+    const sb=parseInt((b.serial||'').split('-').pop())||0;
+    if(sa!==sb) return sa-sb;
+    return b.id.localeCompare(a.id);
   });
   document.getElementById('retTotal').textContent=retTxns.length;
   document.getElementById('retInspect').textContent=retTxns.filter(t=>t.retStatus==='used_inspect').length;
@@ -1736,7 +1754,13 @@ function renderReissue(){
   const filtered=riTxns.filter(t=>(!df||t.dept===df)&&(!q||t.name.toLowerCase().includes(q)||(t.serial||'').toLowerCase().includes(q))).sort((a,b)=>{
     const ca=a.createdAt||a.date||'';
     const cb=b.createdAt||b.date||'';
-    return cb.localeCompare(ca)||b.id.localeCompare(a.id);
+    const dateCmp=cb.localeCompare(ca);
+    if(dateCmp!==0) return dateCmp;
+    // วันที่เดียวกัน → เรียงตาม serial number ท้าย (01, 02, ... 10)
+    const sa=parseInt((a.serial||'').split('-').pop())||0;
+    const sb=parseInt((b.serial||'').split('-').pop())||0;
+    if(sa!==sb) return sa-sb;
+    return b.id.localeCompare(a.id);
   });
   const avail=REGISTRY.filter(r=>r.status==='used_ok').length;
   const saving=riTxns.reduce((s,t)=>s+(t.saving||0),0);
