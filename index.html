@@ -1626,15 +1626,18 @@ function renderBuy(){
   const tf_el=document.getElementById('buyTypeF');
   if(tf_el&&tf_el.options.length<=1) types.forEach(t=>{const o=document.createElement('option');o.value=t;o.textContent=t;tf_el.appendChild(o);});
   const filtered=buyTxns.filter(t=>(!tf||t.type===tf)&&(!q||t.name.toLowerCase().includes(q)||(t.serial||'').toLowerCase().includes(q)||(t.supplier||'').toLowerCase().includes(q))).sort((a,b)=>{
-    const ca=a.createdAt||a.date||'';
-    const cb=b.createdAt||b.date||'';
-    const dateCmp=cb.localeCompare(ca);
+    // 1. วันที่ล่าสุดก่อน (ใช้ date ไม่ใช่ createdAt เพื่อ group วันเดียวกัน)
+    const da=a.date||'';
+    const db=b.date||'';
+    const dateCmp=db.localeCompare(da);
     if(dateCmp!==0) return dateCmp;
-    // วันที่เดียวกัน → เรียงตาม serial number ท้าย (01, 02, ... 10)
+    // 2. วันเดียวกัน → เรียงตามชื่อรายการ (tool เดียวกันอยู่ด้วยกัน)
+    const nameCmp=(a.name||'').localeCompare(b.name||'');
+    if(nameCmp!==0) return nameCmp;
+    // 3. รายการเดียวกัน → เรียง serial 01,02,03...
     const sa=parseInt((a.serial||'').split('-').pop())||0;
     const sb=parseInt((b.serial||'').split('-').pop())||0;
-    if(sa!==sb) return sa-sb;
-    return b.id.localeCompare(a.id);
+    return sa-sb;
   });
   document.getElementById('buyTotal').textContent=buyTxns.length;
   document.getElementById('buyWithSerial').textContent=buyTxns.filter(t=>t.hasSerial).length;
@@ -1664,15 +1667,18 @@ function renderIssue(){
   const df=document.getElementById('issueDeptFilter')?.value||'';
   const issueTxns=TXNS.filter(t=>t.event==='issue');
   const filtered=issueTxns.filter(t=>(!df||t.dept===df)&&(!q||t.name.toLowerCase().includes(q)||(t.serial||'').toLowerCase().includes(q))).sort((a,b)=>{
-    const ca=a.createdAt||a.date||'';
-    const cb=b.createdAt||b.date||'';
-    const dateCmp=cb.localeCompare(ca);
+    // 1. วันที่ล่าสุดก่อน (ใช้ date ไม่ใช่ createdAt เพื่อ group วันเดียวกัน)
+    const da=a.date||'';
+    const db=b.date||'';
+    const dateCmp=db.localeCompare(da);
     if(dateCmp!==0) return dateCmp;
-    // วันที่เดียวกัน → เรียงตาม serial number ท้าย (01, 02, ... 10)
+    // 2. วันเดียวกัน → เรียงตามชื่อรายการ (tool เดียวกันอยู่ด้วยกัน)
+    const nameCmp=(a.name||'').localeCompare(b.name||'');
+    if(nameCmp!==0) return nameCmp;
+    // 3. รายการเดียวกัน → เรียง serial 01,02,03...
     const sa=parseInt((a.serial||'').split('-').pop())||0;
     const sb=parseInt((b.serial||'').split('-').pop())||0;
-    if(sa!==sb) return sa-sb;
-    return b.id.localeCompare(a.id);
+    return sa-sb;
   });
   document.getElementById('issueTotal').textContent=issueTxns.length;
   document.getElementById('issueInUse').textContent=REGISTRY.filter(r=>r.status==='inuse').length;
@@ -1705,15 +1711,18 @@ function renderReturn(){
   const sf=document.getElementById('retStatusF')?.value||'';
   const retTxns=TXNS.filter(t=>t.event==='return');
   const filtered=retTxns.filter(t=>(!sf||t.retStatus===sf)&&(!q||t.name.toLowerCase().includes(q)||(t.serial||'').toLowerCase().includes(q))).sort((a,b)=>{
-    const ca=a.createdAt||a.date||'';
-    const cb=b.createdAt||b.date||'';
-    const dateCmp=cb.localeCompare(ca);
+    // 1. วันที่ล่าสุดก่อน (ใช้ date ไม่ใช่ createdAt เพื่อ group วันเดียวกัน)
+    const da=a.date||'';
+    const db=b.date||'';
+    const dateCmp=db.localeCompare(da);
     if(dateCmp!==0) return dateCmp;
-    // วันที่เดียวกัน → เรียงตาม serial number ท้าย (01, 02, ... 10)
+    // 2. วันเดียวกัน → เรียงตามชื่อรายการ (tool เดียวกันอยู่ด้วยกัน)
+    const nameCmp=(a.name||'').localeCompare(b.name||'');
+    if(nameCmp!==0) return nameCmp;
+    // 3. รายการเดียวกัน → เรียง serial 01,02,03...
     const sa=parseInt((a.serial||'').split('-').pop())||0;
     const sb=parseInt((b.serial||'').split('-').pop())||0;
-    if(sa!==sb) return sa-sb;
-    return b.id.localeCompare(a.id);
+    return sa-sb;
   });
   document.getElementById('retTotal').textContent=retTxns.length;
   document.getElementById('retInspect').textContent=retTxns.filter(t=>t.retStatus==='used_inspect').length;
@@ -1752,15 +1761,18 @@ function renderReissue(){
   const df=document.getElementById('riDeptF')?.value||'';
   const riTxns=TXNS.filter(t=>t.event==='reissue');
   const filtered=riTxns.filter(t=>(!df||t.dept===df)&&(!q||t.name.toLowerCase().includes(q)||(t.serial||'').toLowerCase().includes(q))).sort((a,b)=>{
-    const ca=a.createdAt||a.date||'';
-    const cb=b.createdAt||b.date||'';
-    const dateCmp=cb.localeCompare(ca);
+    // 1. วันที่ล่าสุดก่อน (ใช้ date ไม่ใช่ createdAt เพื่อ group วันเดียวกัน)
+    const da=a.date||'';
+    const db=b.date||'';
+    const dateCmp=db.localeCompare(da);
     if(dateCmp!==0) return dateCmp;
-    // วันที่เดียวกัน → เรียงตาม serial number ท้าย (01, 02, ... 10)
+    // 2. วันเดียวกัน → เรียงตามชื่อรายการ (tool เดียวกันอยู่ด้วยกัน)
+    const nameCmp=(a.name||'').localeCompare(b.name||'');
+    if(nameCmp!==0) return nameCmp;
+    // 3. รายการเดียวกัน → เรียง serial 01,02,03...
     const sa=parseInt((a.serial||'').split('-').pop())||0;
     const sb=parseInt((b.serial||'').split('-').pop())||0;
-    if(sa!==sb) return sa-sb;
-    return b.id.localeCompare(a.id);
+    return sa-sb;
   });
   const avail=REGISTRY.filter(r=>r.status==='used_ok').length;
   const saving=riTxns.reduce((s,t)=>s+(t.saving||0),0);
